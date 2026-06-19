@@ -96,111 +96,148 @@ export const ActionPlanPage: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Best Action */}
-          <div className="p-5 rounded-2xl bg-slate-100/50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 space-y-4 relative overflow-hidden group">
-            <div className="absolute top-2 right-2 text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded font-bold uppercase tracking-wider">
-              Best Match
-            </div>
-            <div className="w-9 h-9 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-              <CheckCircle2 className="w-5 h-5" />
-            </div>
-            <div className="space-y-1">
-              <h3 className="font-extrabold text-sm text-slate-800 dark:text-slate-100">{top3Changes.highestReduction.name}</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 leading-normal line-clamp-2">{top3Changes.highestReduction.description}</p>
-            </div>
-            <div className="grid grid-cols-2 gap-2 text-xs pt-3 border-t border-slate-200 dark:border-white/5 font-medium">
-              <div>
-                <span className="text-slate-500 block">Carbon Saved</span>
-                <span className="text-emerald-600 dark:text-emerald-400">-{top3Changes.highestReduction.carbonReduction} kg/yr</span>
+          <div className="p-5 rounded-2xl bg-slate-100/50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 space-y-4 relative overflow-hidden group flex flex-col justify-between">
+            <div className="space-y-4">
+              <div className="flex justify-between items-start">
+                <div className="text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded font-bold uppercase tracking-wider">
+                  Best Match
+                </div>
+                <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold">{top3Changes.highestReduction.timeline}</span>
               </div>
-              <div>
-                <span className="text-slate-500 block">Difficulty</span>
-                <span className="text-slate-700 dark:text-slate-200">Level {top3Changes.highestReduction.difficulty}/5</span>
+              <div className="w-9 h-9 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                <CheckCircle2 className="w-5 h-5" />
               </div>
+              <div className="space-y-1">
+                <h3 className="font-extrabold text-sm text-slate-800 dark:text-slate-100">{top3Changes.highestReduction.name}</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-normal">{top3Changes.highestReduction.description}</p>
+              </div>
+              {top3Changes.highestReduction.whyItMatters && (
+                <div className="text-[10px] leading-relaxed p-2 bg-slate-100/70 dark:bg-slate-950/50 rounded-lg text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-white/5">
+                  <span className="font-bold text-emerald-600 dark:text-emerald-400 block mb-0.5 text-[9px] uppercase tracking-wider">Why it matches:</span>
+                  {top3Changes.highestReduction.whyItMatters}
+                </div>
+              )}
             </div>
-            <button
-              onClick={() => toggleAction(top3Changes.highestReduction.id)}
-              className={`w-full py-2 rounded-xl text-xs font-semibold border transition-all ${
-                completedActions.includes(top3Changes.highestReduction.id)
-                  ? 'bg-emerald-500 text-slate-950 border-emerald-500 font-bold'
-                  : 'border-slate-200 dark:border-white/5 hover:border-emerald-500/30 text-slate-600 dark:text-slate-300'
-              }`}
-            >
-              {completedActions.includes(top3Changes.highestReduction.id) ? '✓ Enrolled' : 'Enroll Action'}
-            </button>
+            <div className="space-y-3 pt-2">
+              <div className="grid grid-cols-2 gap-2 text-xs pt-3 border-t border-slate-200 dark:border-white/5 font-medium">
+                <div>
+                  <span className="text-slate-500 block">Carbon Saved</span>
+                  <span className="text-emerald-600 dark:text-emerald-400">-{top3Changes.highestReduction.carbonReduction} kg/yr</span>
+                </div>
+                <div>
+                  <span className="text-slate-500 block">Difficulty</span>
+                  <span className="text-slate-700 dark:text-slate-200">Level {top3Changes.highestReduction.difficulty}/5</span>
+                </div>
+              </div>
+              <button
+                onClick={() => toggleAction(top3Changes.highestReduction.id)}
+                className={`w-full py-2 rounded-xl text-xs font-semibold border transition-all ${
+                  completedActions.includes(top3Changes.highestReduction.id)
+                    ? 'bg-emerald-500 text-slate-950 border-emerald-500 font-bold'
+                    : 'border-slate-200 dark:border-white/5 hover:border-emerald-500/30 text-slate-600 dark:text-slate-300'
+                }`}
+              >
+                {completedActions.includes(top3Changes.highestReduction.id) ? '✓ Enrolled' : 'Enroll Action'}
+              </button>
+            </div>
           </div>
 
           {/* Easiest Action */}
-          <div className="p-5 rounded-2xl bg-slate-100/50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 space-y-4 relative overflow-hidden group">
-            <div className="absolute top-2 right-2 text-[10px] bg-teal-500/10 text-teal-600 dark:text-teal-400 px-2 py-0.5 rounded font-bold uppercase tracking-wider">
-              Easiest Cut
-            </div>
-            <div className="w-9 h-9 bg-teal-500/10 rounded-xl flex items-center justify-center text-teal-600 dark:text-teal-400">
-              <Zap className="w-5 h-5" />
-            </div>
-            <div className="space-y-1">
-              <h3 className="font-extrabold text-sm text-slate-800 dark:text-slate-100">{top3Changes.easiestChange.name}</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 leading-normal line-clamp-2">{top3Changes.easiestChange.description}</p>
-            </div>
-            <div className="grid grid-cols-2 gap-2 text-xs pt-3 border-t border-slate-200 dark:border-white/5 font-medium">
-              <div>
-                <span className="text-slate-500 block">Carbon Saved</span>
-                <span className="text-emerald-600 dark:text-emerald-400">-{top3Changes.easiestChange.carbonReduction} kg/yr</span>
+          <div className="p-5 rounded-2xl bg-slate-100/50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 space-y-4 relative overflow-hidden group flex flex-col justify-between">
+            <div className="space-y-4">
+              <div className="flex justify-between items-start">
+                <div className="text-[10px] bg-teal-500/10 text-teal-600 dark:text-teal-400 px-2 py-0.5 rounded font-bold uppercase tracking-wider">
+                  Easiest Cut
+                </div>
+                <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold">{top3Changes.easiestChange.timeline}</span>
               </div>
-              <div>
-                <span className="text-slate-500 block">Difficulty</span>
-                <span className="text-slate-700 dark:text-slate-200">Level {top3Changes.easiestChange.difficulty}/5</span>
+              <div className="w-9 h-9 bg-teal-500/10 rounded-xl flex items-center justify-center text-teal-600 dark:text-teal-400">
+                <Zap className="w-5 h-5" />
               </div>
+              <div className="space-y-1">
+                <h3 className="font-extrabold text-sm text-slate-800 dark:text-slate-100">{top3Changes.easiestChange.name}</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-normal">{top3Changes.easiestChange.description}</p>
+              </div>
+              {top3Changes.easiestChange.whyItMatters && (
+                <div className="text-[10px] leading-relaxed p-2 bg-slate-100/70 dark:bg-slate-950/50 rounded-lg text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-white/5">
+                  <span className="font-bold text-teal-600 dark:text-teal-400 block mb-0.5 text-[9px] uppercase tracking-wider">Why it matches:</span>
+                  {top3Changes.easiestChange.whyItMatters}
+                </div>
+              )}
             </div>
-            <button
-              onClick={() => toggleAction(top3Changes.easiestChange.id)}
-              className={`w-full py-2 rounded-xl text-xs font-semibold border transition-all ${
-                completedActions.includes(top3Changes.easiestChange.id)
-                  ? 'bg-emerald-500 text-slate-950 border-emerald-500 font-bold'
-                  : 'border-slate-200 dark:border-white/5 hover:border-emerald-500/30 text-slate-600 dark:text-slate-300'
-              }`}
-            >
-              {completedActions.includes(top3Changes.easiestChange.id) ? '✓ Enrolled' : 'Enroll Action'}
-            </button>
+            <div className="space-y-3 pt-2">
+              <div className="grid grid-cols-2 gap-2 text-xs pt-3 border-t border-slate-200 dark:border-white/5 font-medium">
+                <div>
+                  <span className="text-slate-500 block">Carbon Saved</span>
+                  <span className="text-emerald-600 dark:text-emerald-400">-{top3Changes.easiestChange.carbonReduction} kg/yr</span>
+                </div>
+                <div>
+                  <span className="text-slate-500 block">Difficulty</span>
+                  <span className="text-slate-700 dark:text-slate-200">Level {top3Changes.easiestChange.difficulty}/5</span>
+                </div>
+              </div>
+              <button
+                onClick={() => toggleAction(top3Changes.easiestChange.id)}
+                className={`w-full py-2 rounded-xl text-xs font-semibold border transition-all ${
+                  completedActions.includes(top3Changes.easiestChange.id)
+                    ? 'bg-emerald-500 text-slate-950 border-emerald-500 font-bold'
+                    : 'border-slate-200 dark:border-white/5 hover:border-emerald-500/30 text-slate-600 dark:text-slate-300'
+                }`}
+              >
+                {completedActions.includes(top3Changes.easiestChange.id) ? '✓ Enrolled' : 'Enroll Action'}
+              </button>
+            </div>
           </div>
 
           {/* Maximum Impact Action */}
-          {/* Note: In our selections, highest reduction represents max impact */}
-          {/* We will pick the second highest carbon reduction for the third card to add variety */}
           {(() => {
             const sorted = [...interventions].sort((a, b) => b.carbonReduction - a.carbonReduction);
             const maxImpact = sorted[1] || sorted[0];
             return (
-              <div className="p-5 rounded-2xl bg-slate-100/50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 space-y-4 relative overflow-hidden group">
-                <div className="absolute top-2 right-2 text-[10px] bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded font-bold uppercase tracking-wider">
-                  Max Impact
-                </div>
-                <div className="w-9 h-9 bg-indigo-500/10 rounded-xl flex items-center justify-center text-indigo-600 dark:text-indigo-400">
-                  <AlertCircle className="w-5 h-5" />
-                </div>
-                <div className="space-y-1">
-                  <h3 className="font-extrabold text-sm text-slate-800 dark:text-slate-100">{maxImpact.name}</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-normal line-clamp-2">{maxImpact.description}</p>
-                </div>
-                <div className="grid grid-cols-2 gap-2 text-xs pt-3 border-t border-slate-200 dark:border-white/5 font-medium">
-                  <div>
-                    <span className="text-slate-500 block">Carbon Saved</span>
-                    <span className="text-emerald-600 dark:text-emerald-400">-{maxImpact.carbonReduction} kg/yr</span>
+              <div className="p-5 rounded-2xl bg-slate-100/50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 space-y-4 relative overflow-hidden group flex flex-col justify-between">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div className="absolute top-2 right-2 text-[10px] bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded font-bold uppercase tracking-wider">
+                      Max Impact
+                    </div>
+                    <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold">{maxImpact.timeline}</span>
                   </div>
-                  <div>
-                    <span className="text-slate-500 block">Difficulty</span>
-                    <span className="text-slate-700 dark:text-slate-200">Level {maxImpact.difficulty}/5</span>
+                  <div className="w-9 h-9 bg-indigo-500/10 rounded-xl flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                    <AlertCircle className="w-5 h-5" />
                   </div>
+                  <div className="space-y-1">
+                    <h3 className="font-extrabold text-sm text-slate-800 dark:text-slate-100">{maxImpact.name}</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-normal">{maxImpact.description}</p>
+                  </div>
+                  {maxImpact.whyItMatters && (
+                    <div className="text-[10px] leading-relaxed p-2 bg-slate-100/70 dark:bg-slate-950/50 rounded-lg text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-white/5">
+                      <span className="font-bold text-indigo-600 dark:text-indigo-400 block mb-0.5 text-[9px] uppercase tracking-wider">Why it matches:</span>
+                      {maxImpact.whyItMatters}
+                    </div>
+                  )}
                 </div>
-                <button
-                  onClick={() => toggleAction(maxImpact.id)}
-                  className={`w-full py-2 rounded-xl text-xs font-semibold border transition-all ${
-                    completedActions.includes(maxImpact.id)
-                      ? 'bg-emerald-500 text-slate-950 border-emerald-500 font-bold'
-                      : 'border-slate-200 dark:border-white/5 hover:border-emerald-500/30 text-slate-600 dark:text-slate-300'
-                  }`}
-                >
-                  {completedActions.includes(maxImpact.id) ? '✓ Enrolled' : 'Enroll Action'}
-                </button>
+                <div className="space-y-3 pt-2">
+                  <div className="grid grid-cols-2 gap-2 text-xs pt-3 border-t border-slate-200 dark:border-white/5 font-medium">
+                    <div>
+                      <span className="text-slate-500 block">Carbon Saved</span>
+                      <span className="text-emerald-600 dark:text-emerald-400">-{maxImpact.carbonReduction} kg/yr</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block">Difficulty</span>
+                      <span className="text-slate-700 dark:text-slate-200">Level {maxImpact.difficulty}/5</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => toggleAction(maxImpact.id)}
+                    className={`w-full py-2 rounded-xl text-xs font-semibold border transition-all ${
+                      completedActions.includes(maxImpact.id)
+                        ? 'bg-emerald-500 text-slate-950 border-emerald-500 font-bold'
+                        : 'border-slate-200 dark:border-white/5 hover:border-emerald-500/30 text-slate-600 dark:text-slate-300'
+                    }`}
+                  >
+                    {completedActions.includes(maxImpact.id) ? '✓ Enrolled' : 'Enroll Action'}
+                  </button>
+                </div>
               </div>
             );
           })()}
@@ -237,18 +274,23 @@ export const ActionPlanPage: React.FC = () => {
                 </div>
 
                 {/* Details */}
-                <div className="flex-grow min-w-0">
+                <div className="flex-grow min-w-0 space-y-1">
                   <div className="flex justify-between items-start gap-2">
-                    <h4 className={`font-bold text-sm truncate ${isCompleted ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-700 dark:text-slate-200'}`}>
+                    <h4 className={`font-bold text-sm ${isCompleted ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-700 dark:text-slate-200'}`}>
                       {act.name}
                     </h4>
                     <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase flex-shrink-0 bg-slate-100 dark:bg-slate-900 px-1.5 py-0.5 rounded">
                       {act.category}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
                     {act.description}
                   </p>
+                  {act.whyItMatters && (
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 leading-normal border-l-2 border-emerald-500/20 pl-2 italic">
+                      {act.whyItMatters}
+                    </p>
+                  )}
                 </div>
 
                 {/* Savings stats */}

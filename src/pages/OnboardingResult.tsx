@@ -120,158 +120,191 @@ export const OnboardingResult: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Card 1: Highest Carbon Reduction */}
-            <div className="rounded-2xl p-[1px] bg-gradient-to-tr from-emerald-400 to-transparent shadow-xl glass-card bg-white/50 dark:bg-slate-900/40 relative overflow-hidden group">
+            <div className="rounded-2xl p-[1px] bg-gradient-to-tr from-emerald-400 to-transparent shadow-xl glass-card bg-white/50 dark:bg-slate-900/40 relative overflow-hidden group flex flex-col justify-between">
               <div className="absolute top-2 right-2 px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-md text-[10px] font-bold uppercase tracking-wider border border-emerald-500/20">
                 Max Carbon Cut
               </div>
-              <div className="p-5 space-y-4">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-                  <Leaf className="w-5 h-5" />
-                </div>
-                <div className="space-y-1">
-                  <h3 className="font-bold text-slate-800 dark:text-slate-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-300 transition-colors text-base line-clamp-2">
-                    {highestReduction.name}
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-3">
-                    {highestReduction.description}
-                  </p>
+              <div className="p-5 space-y-4 flex-grow flex flex-col justify-between">
+                <div className="space-y-4">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                    <Leaf className="w-5 h-5" />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="font-bold text-slate-800 dark:text-slate-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-300 transition-colors text-base">
+                      {highestReduction.name}
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      {highestReduction.description}
+                    </p>
+                  </div>
+
+                  {highestReduction.whyItMatters && (
+                    <div className="text-[11px] leading-relaxed p-2.5 bg-slate-100/70 dark:bg-slate-950/50 rounded-lg text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/5">
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400 block mb-0.5 text-[10px] uppercase tracking-wider">Why it matches your DNA:</span>
+                      {highestReduction.whyItMatters}
+                    </div>
+                  )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-2.5 pt-3 border-t border-slate-200 dark:border-white/5 text-xs">
-                  <div>
-                    <span className="text-slate-500 block">Carbon Cut</span>
-                    <span className="font-extrabold text-emerald-600 dark:text-emerald-400">-{highestReduction.carbonReduction} kg/yr</span>
+                <div className="space-y-3.5 mt-4">
+                  <div className="grid grid-cols-2 gap-2.5 pt-3 border-t border-slate-200 dark:border-white/5 text-xs">
+                    <div>
+                      <span className="text-slate-500 block">Carbon Cut</span>
+                      <span className="font-extrabold text-emerald-600 dark:text-emerald-400">-{highestReduction.carbonReduction} kg/yr</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block">Money Saved</span>
+                      <span className="font-extrabold text-teal-600 dark:text-teal-400">
+                        {highestReduction.moneySavings >= 0 ? `$${highestReduction.moneySavings}` : `-$${Math.abs(highestReduction.moneySavings)}`} /yr
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block">Effort Level</span>
+                      <span className="font-bold text-yellow-600 dark:text-yellow-400">{highestReduction.effortLevel}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block">Timeline</span>
+                      <span className="font-bold text-indigo-600 dark:text-indigo-400">{highestReduction.timeline}</span>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-slate-500 block">Money Saved</span>
-                    <span className="font-extrabold text-teal-600 dark:text-teal-400">
-                      {highestReduction.moneySavings >= 0 ? `$${highestReduction.moneySavings}` : `-$${Math.abs(highestReduction.moneySavings)}`} /yr
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 block">Effort Level</span>
-                    <span className="font-bold text-yellow-600 dark:text-yellow-400">{highestReduction.effortLevel}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 block">Timeline</span>
-                    <span className="font-bold text-indigo-600 dark:text-indigo-400">{highestReduction.timeline}</span>
-                  </div>
-                </div>
 
-                <button
-                  onClick={() => toggleAction(highestReduction.id)}
-                  className={`w-full py-2 rounded-xl text-xs font-semibold border transition-all ${
-                    completedActions.includes(highestReduction.id)
-                      ? 'bg-emerald-500 border-emerald-500 text-slate-950 font-bold'
-                      : 'border-slate-200 dark:border-white/5 hover:border-emerald-500/30 text-slate-600 dark:text-slate-300 hover:bg-emerald-500/5'
-                  }`}
-                >
-                  {completedActions.includes(highestReduction.id) ? '✓ Added to Action Plan' : '+ Add to Action Plan'}
-                </button>
+                  <button
+                    onClick={() => toggleAction(highestReduction.id)}
+                    className={`w-full py-2 rounded-xl text-xs font-semibold border transition-all ${
+                      completedActions.includes(highestReduction.id)
+                        ? 'bg-emerald-500 border-emerald-500 text-slate-950 font-bold'
+                        : 'border-slate-200 dark:border-white/5 hover:border-emerald-500/30 text-slate-600 dark:text-slate-300 hover:bg-emerald-500/5'
+                    }`}
+                  >
+                    {completedActions.includes(highestReduction.id) ? '✓ Added to Action Plan' : '+ Add to Action Plan'}
+                  </button>
+                </div>
               </div>
             </div>
 
             {/* Card 2: Highest Money Saving */}
-            <div className="rounded-2xl p-[1px] bg-gradient-to-tr from-teal-400 to-transparent shadow-xl glass-card bg-white/50 dark:bg-slate-900/40 relative overflow-hidden group">
+            <div className="rounded-2xl p-[1px] bg-gradient-to-tr from-teal-400 to-transparent shadow-xl glass-card bg-white/50 dark:bg-slate-900/40 relative overflow-hidden group flex flex-col justify-between">
               <div className="absolute top-2 right-2 px-2 py-0.5 bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-md text-[10px] font-bold uppercase tracking-wider border border-teal-500/20">
                 Max Money Saved
               </div>
-              <div className="p-5 space-y-4">
-                <div className="w-10 h-10 rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-600 dark:text-teal-400">
-                  <DollarSign className="w-5 h-5" />
-                </div>
-                <div className="space-y-1">
-                  <h3 className="font-bold text-slate-800 dark:text-slate-100 group-hover:text-teal-600 dark:group-hover:text-teal-300 transition-colors text-base line-clamp-2">
-                    {highestMoneySaving.name}
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-3">
-                    {highestMoneySaving.description}
-                  </p>
+              <div className="p-5 space-y-4 flex-grow flex flex-col justify-between">
+                <div className="space-y-4">
+                  <div className="w-10 h-10 rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-600 dark:text-teal-400">
+                    <DollarSign className="w-5 h-5" />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="font-bold text-slate-800 dark:text-slate-100 group-hover:text-teal-600 dark:group-hover:text-teal-300 transition-colors text-base">
+                      {highestMoneySaving.name}
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      {highestMoneySaving.description}
+                    </p>
+                  </div>
+
+                  {highestMoneySaving.whyItMatters && (
+                    <div className="text-[11px] leading-relaxed p-2.5 bg-slate-100/70 dark:bg-slate-950/50 rounded-lg text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/5">
+                      <span className="font-bold text-teal-600 dark:text-teal-400 block mb-0.5 text-[10px] uppercase tracking-wider">Why it matches your DNA:</span>
+                      {highestMoneySaving.whyItMatters}
+                    </div>
+                  )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-2.5 pt-3 border-t border-slate-200 dark:border-white/5 text-xs">
-                  <div>
-                    <span className="text-slate-500 block">Carbon Cut</span>
-                    <span className="font-extrabold text-emerald-600 dark:text-emerald-400">-{highestMoneySaving.carbonReduction} kg/yr</span>
+                <div className="space-y-3.5 mt-4">
+                  <div className="grid grid-cols-2 gap-2.5 pt-3 border-t border-slate-200 dark:border-white/5 text-xs">
+                    <div>
+                      <span className="text-slate-500 block">Carbon Cut</span>
+                      <span className="font-extrabold text-emerald-600 dark:text-emerald-400">-{highestMoneySaving.carbonReduction} kg/yr</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block">Money Saved</span>
+                      <span className="font-extrabold text-teal-600 dark:text-teal-400">
+                        {highestMoneySaving.moneySavings >= 0 ? `$${highestMoneySaving.moneySavings}` : `-$${Math.abs(highestMoneySaving.moneySavings)}`} /yr
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block">Effort Level</span>
+                      <span className="font-bold text-yellow-600 dark:text-yellow-400">{highestMoneySaving.effortLevel}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block">Timeline</span>
+                      <span className="font-bold text-indigo-600 dark:text-indigo-400">{highestMoneySaving.timeline}</span>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-slate-500 block">Money Saved</span>
-                    <span className="font-extrabold text-teal-600 dark:text-teal-400">
-                      {highestMoneySaving.moneySavings >= 0 ? `$${highestMoneySaving.moneySavings}` : `-$${Math.abs(highestMoneySaving.moneySavings)}`} /yr
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 block">Effort Level</span>
-                    <span className="font-bold text-yellow-600 dark:text-yellow-400">{highestMoneySaving.effortLevel}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 block">Timeline</span>
-                    <span className="font-bold text-indigo-600 dark:text-indigo-400">{highestMoneySaving.timeline}</span>
-                  </div>
-                </div>
 
-                <button
-                  onClick={() => toggleAction(highestMoneySaving.id)}
-                  className={`w-full py-2 rounded-xl text-xs font-semibold border transition-all ${
-                    completedActions.includes(highestMoneySaving.id)
-                      ? 'bg-emerald-500 border-emerald-500 text-slate-950 font-bold'
-                      : 'border-slate-200 dark:border-white/5 hover:border-emerald-500/30 text-slate-600 dark:text-slate-300 hover:bg-emerald-500/5'
-                  }`}
-                >
-                  {completedActions.includes(highestMoneySaving.id) ? '✓ Added to Action Plan' : '+ Add to Action Plan'}
-                </button>
+                  <button
+                    onClick={() => toggleAction(highestMoneySaving.id)}
+                    className={`w-full py-2 rounded-xl text-xs font-semibold border transition-all ${
+                      completedActions.includes(highestMoneySaving.id)
+                        ? 'bg-emerald-500 border-emerald-500 text-slate-950 font-bold'
+                        : 'border-slate-200 dark:border-white/5 hover:border-emerald-500/30 text-slate-600 dark:text-slate-300 hover:bg-emerald-500/5'
+                    }`}
+                  >
+                    {completedActions.includes(highestMoneySaving.id) ? '✓ Added to Action Plan' : '+ Add to Action Plan'}
+                  </button>
+                </div>
               </div>
             </div>
 
             {/* Card 3: Easiest Change */}
-            <div className="rounded-2xl p-[1px] bg-gradient-to-tr from-indigo-400 to-transparent shadow-xl glass-card bg-white/50 dark:bg-slate-900/40 relative overflow-hidden group">
+            <div className="rounded-2xl p-[1px] bg-gradient-to-tr from-indigo-400 to-transparent shadow-xl glass-card bg-white/50 dark:bg-slate-900/40 relative overflow-hidden group flex flex-col justify-between">
               <div className="absolute top-2 right-2 px-2 py-0.5 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-md text-[10px] font-bold uppercase tracking-wider border border-indigo-500/20">
                 Easiest Habit Swap
               </div>
-              <div className="p-5 space-y-4">
-                <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
-                  <Smile className="w-5 h-5" />
-                </div>
-                <div className="space-y-1">
-                  <h3 className="font-bold text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors text-base line-clamp-2">
-                    {easiestChange.name}
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-3">
-                    {easiestChange.description}
-                  </p>
+              <div className="p-5 space-y-4 flex-grow flex flex-col justify-between">
+                <div className="space-y-4">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                    <Smile className="w-5 h-5" />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="font-bold text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors text-base">
+                      {easiestChange.name}
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      {easiestChange.description}
+                    </p>
+                  </div>
+
+                  {easiestChange.whyItMatters && (
+                    <div className="text-[11px] leading-relaxed p-2.5 bg-slate-100/70 dark:bg-slate-950/50 rounded-lg text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/5">
+                      <span className="font-bold text-indigo-600 dark:text-indigo-400 block mb-0.5 text-[10px] uppercase tracking-wider">Why it matches your DNA:</span>
+                      {easiestChange.whyItMatters}
+                    </div>
+                  )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-2.5 pt-3 border-t border-slate-200 dark:border-white/5 text-xs">
-                  <div>
-                    <span className="text-slate-500 block">Carbon Cut</span>
-                    <span className="font-extrabold text-emerald-600 dark:text-emerald-400">-{easiestChange.carbonReduction} kg/yr</span>
+                <div className="space-y-3.5 mt-4">
+                  <div className="grid grid-cols-2 gap-2.5 pt-3 border-t border-slate-200 dark:border-white/5 text-xs">
+                    <div>
+                      <span className="text-slate-500 block">Carbon Cut</span>
+                      <span className="font-extrabold text-emerald-600 dark:text-emerald-400">-{easiestChange.carbonReduction} kg/yr</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block">Money Saved</span>
+                      <span className="font-extrabold text-teal-600 dark:text-teal-400">
+                        {easiestChange.moneySavings >= 0 ? `$${easiestChange.moneySavings}` : `-$${Math.abs(easiestChange.moneySavings)}`} /yr
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block">Effort Level</span>
+                      <span className="font-bold text-yellow-600 dark:text-yellow-400">{easiestChange.effortLevel}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block">Timeline</span>
+                      <span className="font-bold text-indigo-600 dark:text-indigo-400">{easiestChange.timeline}</span>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-slate-500 block">Money Saved</span>
-                    <span className="font-extrabold text-teal-600 dark:text-teal-400">
-                      {easiestChange.moneySavings >= 0 ? `$${easiestChange.moneySavings}` : `-$${Math.abs(easiestChange.moneySavings)}`} /yr
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 block">Effort Level</span>
-                    <span className="font-bold text-yellow-600 dark:text-yellow-400">{easiestChange.effortLevel}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 block">Timeline</span>
-                    <span className="font-bold text-indigo-600 dark:text-indigo-400">{easiestChange.timeline}</span>
-                  </div>
-                </div>
 
-                <button
-                  onClick={() => toggleAction(easiestChange.id)}
-                  className={`w-full py-2 rounded-xl text-xs font-semibold border transition-all ${
-                    completedActions.includes(easiestChange.id)
-                      ? 'bg-emerald-500 border-emerald-500 text-slate-950 font-bold'
-                      : 'border-slate-200 dark:border-white/5 hover:border-emerald-500/30 text-slate-600 dark:text-slate-300 hover:bg-emerald-500/5'
-                  }`}
-                >
-                  {completedActions.includes(easiestChange.id) ? '✓ Added to Action Plan' : '+ Add to Action Plan'}
-                </button>
+                  <button
+                    onClick={() => toggleAction(easiestChange.id)}
+                    className={`w-full py-2 rounded-xl text-xs font-semibold border transition-all ${
+                      completedActions.includes(easiestChange.id)
+                        ? 'bg-emerald-500 border-emerald-500 text-slate-950 font-bold'
+                        : 'border-slate-200 dark:border-white/5 hover:border-emerald-500/30 text-slate-600 dark:text-slate-300 hover:bg-emerald-500/5'
+                    }`}
+                  >
+                    {completedActions.includes(easiestChange.id) ? '✓ Added to Action Plan' : '+ Add to Action Plan'}
+                  </button>
+                </div>
               </div>
             </div>
           </div>

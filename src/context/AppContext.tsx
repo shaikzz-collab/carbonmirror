@@ -18,6 +18,8 @@ import {
   generateInterventions,
   selectTop3LifestyleChanges
 } from '../utils/calculations';
+import { initializeStorage, safeGetItem, safeSetItem, safeRemoveItem, safeClear } from '../utils/storage';
+import { validateProfile, validateLifestyleAnswers, validateReceiptItem } from '../utils/validation';
 
 interface AppContextType {
   user: UserProfile | null;
@@ -151,8 +153,17 @@ const groupItemsIntoReceipts = (items: any[]): CarbonReceipt[] => {
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile | null>(() => {
-    const data = localStorage.getItem('cm_user');
-    return data ? JSON.parse(data) : null;
+    initializeStorage();
+    const data = safeGetItem<UserProfile | null>('cm_user', null);
+    if (data) {
+      try {
+        return validateProfile(data);
+      } catch (err) {
+        safeRemoveItem('cm_user');
+        return null;
+      }
+    }
+    return null;
   });
 
   const [onboarded, setOnboarded] = useState<boolean>(false);
@@ -165,8 +176,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [streak, setStreak] = useState<number>(1);
 
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
-    const data = localStorage.getItem('cm_theme');
-    return (data as 'dark' | 'light') || 'dark';
+    const data = safeGetItem<string>('cm_theme', 'dark');
+    return data === 'light' ? 'light' : 'dark';
   });
 
   const [chatHistory, setChatHistory] = useState<CoachMessage[]>(INITIAL_COACH_MESSAGES);
@@ -197,7 +208,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Sync theme to document body
   useEffect(() => {
-    localStorage.setItem('cm_theme', theme);
+    safeSetItem('cm_theme', theme);
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
     } else {
@@ -206,7 +217,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [theme]);
 
   const fetchUserData = async () => {
-    const token = localStorage.getItem('cm_token');
+    const token = safeGetItem<string | null>('cm_token', null);
     if (!token) return;
 
     try {
@@ -221,15 +232,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return;
       }
       const profData = await profRes.json();
-      setUser(profData.user);
-      localStorage.setItem('cm_user', JSON.stringify(profData.user));
+      try {
+        const validatedProfile = validateProfile(profData.user);
+        setUser(validatedProfile);
+        safeSetItem('cm_user', validatedProfile);
+      } catch (err) {
+        console.error('Invalid profile from API:', err);
+        logout();
+        return;
+      }
 
       // 2. Fetch answers
       const answersRes = await fetch('/api/lifestyle', { headers });
       const answersData = await answersRes.json();
       if (answersData) {
-        setAnswers(answersData);
-        setOnboarded(true);
+        try {
+          const validatedAnswers = validateLifestyleAnswers(answersData);
+          setAnswers(validatedAnswers);
+          setOnboarded(true);
+        } catch (err) {
+          console.warn('Malformed lifestyle answers loaded:', err);
+          setAnswers(null);
+          setOnboarded(false);
+        }
       } else {
         setAnswers(null);
         setOnboarded(false);
@@ -277,7 +302,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Sync metadata triggers (streak, badges, chatHistory)
   useEffect(() => {
-    const token = localStorage.getItem('cm_token');
+    const token = safeGetItem<string | null>('cm_token', null);
     if (user && token) {
       const headers = {
         'Content-Type': 'application/json',
@@ -293,7 +318,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Load initial data on mount
   useEffect(() => {
-    const token = localStorage.getItem('cm_token');
+    const token = safeGetItem<string | null>('cm_token', null);
     if (token) {
       fetchUserData();
     }
@@ -310,9 +335,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       throw new Error(err.error || 'Failed to login.');
     }
     const data = await res.json();
-    localStorage.setItem('cm_token', data.token);
-    localStorage.setItem('cm_user', JSON.stringify(data.user));
-    setUser(data.user);
+    try {
+      const validatedProfile = validateProfile(data.user);
+      safeSetItem('cm_token', data.token);
+      safeSetItem('cm_user', validatedProfile);
+      setUser(validatedProfile);
+    } catch (err) {
+      throw new Error('Corrupted profile received during login.');
+    }
     await fetchUserData();
     setActiveTab('dashboard');
   };
@@ -328,9 +358,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       throw new Error(err.error || 'Failed to register.');
     }
     const data = await res.json();
-    localStorage.setItem('cm_token', data.token);
-    localStorage.setItem('cm_user', JSON.stringify(data.user));
-    setUser(data.user);
+    try {
+      const validatedProfile = validateProfile(data.user);
+      safeSetItem('cm_token', data.token);
+      safeSetItem('cm_user', validatedProfile);
+      setUser(validatedProfile);
+    } catch (err) {
+      throw new Error('Corrupted profile received during registration.');
+    }
     setAnswers(null);
     setOnboarded(false);
     setDailyReceipts(groupItemsIntoReceipts([]));
@@ -343,8 +378,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const logout = () => {
-    localStorage.removeItem('cm_token');
-    localStorage.removeItem('cm_user');
+    safeRemoveItem('cm_token');
+    safeRemoveItem('cm_user');
     setUser(null);
     setAnswers(null);
     setOnboarded(false);
@@ -358,20 +393,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const setOnboardingData = async (newAnswers: LifestyleAnswers) => {
-    setAnswers(newAnswers);
-    setOnboarded(true);
-    setActiveTab('reveal');
+    try {
+      const validatedAnswers = validateLifestyleAnswers(newAnswers);
+      setAnswers(validatedAnswers);
+      setOnboarded(true);
+      setActiveTab('reveal');
 
-    const token = localStorage.getItem('cm_token');
-    if (user && token) {
-      await fetch('/api/lifestyle', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(newAnswers)
-      });
+      const token = safeGetItem<string | null>('cm_token', null);
+      if (user && token) {
+        await fetch('/api/lifestyle', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(validatedAnswers)
+        });
+      }
+    } catch (err: any) {
+      console.error('Failed to save onboarding data:', err);
     }
   };
 
@@ -395,7 +435,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       );
     }
 
-    const token = localStorage.getItem('cm_token');
+    const token = safeGetItem<string | null>('cm_token', null);
     if (user && token) {
       await fetch('/api/actions', {
         method: 'POST',
@@ -409,37 +449,43 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const addReceiptItem = async (newItem: Omit<ReceiptItem, 'id'>) => {
-    const item: ReceiptItem = {
-      ...newItem,
-      id: `item_${Date.now()}`
-    };
+    try {
+      const validatedItem = validateReceiptItem(newItem);
+      const item: ReceiptItem = {
+        ...validatedItem,
+        id: `item_${Date.now()}`
+      };
 
-    const todayStr = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      const todayStr = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-    const token = localStorage.getItem('cm_token');
-    if (user && token) {
-      await fetch('/api/receipts', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          ...item,
-          date: todayStr
-        })
-      });
+      const token = safeGetItem<string | null>('cm_token', null);
+      if (user && token) {
+        await fetch('/api/receipts', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            ...item,
+            date: todayStr
+          })
+        });
 
-      const res = await fetch('/api/receipts', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await res.json();
-      setDailyReceipts(groupItemsIntoReceipts(data));
+        const res = await fetch('/api/receipts', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        setDailyReceipts(groupItemsIntoReceipts(data));
+      }
+    } catch (err: any) {
+      console.error('Failed to add receipt item:', err);
+      alert(err.message || 'Invalid receipt data.');
     }
   };
 
   const deleteReceiptItem = async (id: string) => {
-    const token = localStorage.getItem('cm_token');
+    const token = safeGetItem<string | null>('cm_token', null);
     if (user && token) {
       await fetch(`/api/receipts/${id}`, {
         method: 'DELETE',
@@ -455,7 +501,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const resetReceiptToday = async () => {
-    const token = localStorage.getItem('cm_token');
+    const token = safeGetItem<string | null>('cm_token', null);
     if (user && token) {
       await fetch('/api/receipts', {
         method: 'DELETE',
@@ -479,7 +525,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       prev.map(x => (x.id === challengeId ? { ...x, isCompleted: nextCompleted } : x))
     );
 
-    const token = localStorage.getItem('cm_token');
+    const token = safeGetItem<string | null>('cm_token', null);
     if (user && token) {
       await fetch('/api/challenges', {
         method: 'POST',
@@ -557,7 +603,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const resetAllData = async () => {
-    const token = localStorage.getItem('cm_token');
+    const token = safeGetItem<string | null>('cm_token', null);
     if (user && token) {
       const headers = { 'Authorization': `Bearer ${token}` };
       await fetch('/api/receipts', { method: 'DELETE', headers });
@@ -568,7 +614,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
     }
 
-    localStorage.clear();
+    safeClear();
     setUser(null);
     setOnboarded(false);
     setAnswers(null);

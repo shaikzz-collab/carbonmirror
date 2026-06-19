@@ -101,7 +101,7 @@ export const Onboarding: React.FC = () => {
                       <button
                         key={opt.key}
                         onClick={() => updateAnswer('commuteStyle', opt.key as any)}
-                        className={`p-4 text-left rounded-2xl border transition-all ${
+                        className={`p-4 text-left rounded-2xl border transition-all focus-visible:ring-2 focus-visible:ring-emerald-500 focus:outline-none ${
                           answers.commuteStyle === opt.key
                             ? 'bg-emerald-500/10 border-emerald-400/80 text-emerald-700 dark:text-emerald-300'
                             : 'bg-slate-100/50 dark:bg-slate-950/40 border-slate-200 dark:border-white/5 hover:border-slate-700 text-slate-600 dark:text-slate-300'
@@ -135,7 +135,8 @@ export const Onboarding: React.FC = () => {
                       step="5"
                       value={answers.commuteDistance}
                       onChange={(e) => updateAnswer('commuteDistance', parseInt(e.target.value))}
-                      className="w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-full appearance-none cursor-pointer accent-emerald-400 focus:outline-none"
+                      className="w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-full appearance-none cursor-pointer accent-emerald-400 focus-visible:ring-2 focus-visible:ring-emerald-500 focus:outline-none"
+                      aria-label="Weekly Commute Distance Slider"
                     />
                     <div className="flex gap-2 justify-center">
                       {[15, 50, 100, 200].map(m => (
@@ -169,7 +170,7 @@ export const Onboarding: React.FC = () => {
                       <button
                         key={opt.key}
                         onClick={() => updateAnswer('dietStyle', opt.key as any)}
-                        className={`p-4 text-left rounded-2xl border transition-all ${
+                        className={`p-4 text-left rounded-2xl border transition-all focus-visible:ring-2 focus-visible:ring-emerald-500 focus:outline-none ${
                           answers.dietStyle === opt.key
                             ? 'bg-emerald-500/10 border-emerald-400/80 text-emerald-700 dark:text-emerald-300'
                             : 'bg-slate-100/50 dark:bg-slate-950/40 border-slate-200 dark:border-white/5 hover:border-slate-700 text-slate-600 dark:text-slate-300'
@@ -193,7 +194,7 @@ export const Onboarding: React.FC = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <button
                       onClick={() => updateAnswer('localFood', true)}
-                      className={`p-5 text-left rounded-2xl border transition-all ${
+                      className={`p-5 text-left rounded-2xl border transition-all focus-visible:ring-2 focus-visible:ring-emerald-500 focus:outline-none ${
                         answers.localFood
                           ? 'bg-emerald-500/10 border-emerald-400/80 text-emerald-300'
                           : 'bg-slate-100/50 dark:bg-slate-950/40 border-slate-200 dark:border-white/5 hover:border-slate-700 text-slate-600 dark:text-slate-300'
@@ -204,7 +205,7 @@ export const Onboarding: React.FC = () => {
                     </button>
                     <button
                       onClick={() => updateAnswer('localFood', false)}
-                      className={`p-5 text-left rounded-2xl border transition-all ${
+                      className={`p-5 text-left rounded-2xl border transition-all focus-visible:ring-2 focus-visible:ring-emerald-500 focus:outline-none ${
                         !answers.localFood
                           ? 'bg-emerald-500/10 border-emerald-400/80 text-emerald-300'
                           : 'bg-slate-100/50 dark:bg-slate-950/40 border-slate-200 dark:border-white/5 hover:border-slate-700 text-slate-600 dark:text-slate-300'
@@ -237,7 +238,8 @@ export const Onboarding: React.FC = () => {
                       step="10"
                       value={answers.electricityBill}
                       onChange={(e) => updateAnswer('electricityBill', parseInt(e.target.value))}
-                      className="w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-full appearance-none cursor-pointer accent-emerald-400 focus:outline-none"
+                      className="w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-full appearance-none cursor-pointer accent-emerald-400 focus-visible:ring-2 focus-visible:ring-emerald-500 focus:outline-none"
+                      aria-label="Average Monthly Electricity Bill Slider"
                     />
                     <div className="flex gap-2 justify-center">
                       {[40, 80, 120, 200].map(b => (
@@ -264,7 +266,7 @@ export const Onboarding: React.FC = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <button
                       onClick={() => updateAnswer('greenEnergy', true)}
-                      className={`p-5 text-left rounded-2xl border transition-all ${
+                      className={`p-5 text-left rounded-2xl border transition-all focus-visible:ring-2 focus-visible:ring-emerald-500 focus:outline-none ${
                         answers.greenEnergy
                           ? 'bg-emerald-500/10 border-emerald-400/80 text-emerald-300'
                           : 'bg-slate-100/50 dark:bg-slate-950/40 border-slate-200 dark:border-white/5 hover:border-slate-700 text-slate-600 dark:text-slate-300'
@@ -275,7 +277,7 @@ export const Onboarding: React.FC = () => {
                     </button>
                     <button
                       onClick={() => updateAnswer('greenEnergy', false)}
-                      className={`p-5 text-left rounded-2xl border transition-all ${
+                      className={`p-5 text-left rounded-2xl border transition-all focus-visible:ring-2 focus-visible:ring-emerald-500 focus:outline-none ${
                         !answers.greenEnergy
                           ? 'bg-emerald-500/10 border-emerald-400/80 text-emerald-300'
                           : 'bg-slate-100/50 dark:bg-slate-950/40 border-slate-200 dark:border-white/5 hover:border-slate-700 text-slate-600 dark:text-slate-300'
@@ -304,7 +306,7 @@ export const Onboarding: React.FC = () => {
                       <button
                         key={opt.key}
                         onClick={() => updateAnswer('acUsage', opt.key as any)}
-                        className={`p-4 text-left rounded-2xl border transition-all ${
+                        className={`p-4 text-left rounded-2xl border transition-all focus-visible:ring-2 focus-visible:ring-emerald-500 focus:outline-none ${
                           answers.acUsage === opt.key
                             ? 'bg-emerald-500/10 border-emerald-400/80 text-emerald-700 dark:text-emerald-300'
                             : 'bg-slate-100/50 dark:bg-slate-950/40 border-slate-200 dark:border-white/5 hover:border-slate-700 text-slate-600 dark:text-slate-300'
@@ -335,7 +337,7 @@ export const Onboarding: React.FC = () => {
                       <button
                         key={opt.key}
                         onClick={() => updateAnswer('onlinePurchases', opt.key as any)}
-                        className={`p-4 text-left rounded-2xl border transition-all ${
+                        className={`p-4 text-left rounded-2xl border transition-all focus-visible:ring-2 focus-visible:ring-emerald-500 focus:outline-none ${
                           answers.onlinePurchases === opt.key
                             ? 'bg-emerald-500/10 border-emerald-400/80 text-emerald-700 dark:text-emerald-300'
                             : 'bg-slate-100/50 dark:bg-slate-950/40 border-slate-200 dark:border-white/5 hover:border-slate-700 text-slate-600 dark:text-slate-300'
@@ -366,7 +368,7 @@ export const Onboarding: React.FC = () => {
                       <button
                         key={opt.key}
                         onClick={() => updateAnswer('deliveryFrequency', opt.key as any)}
-                        className={`p-4 text-left rounded-2xl border transition-all ${
+                        className={`p-4 text-left rounded-2xl border transition-all focus-visible:ring-2 focus-visible:ring-emerald-500 focus:outline-none ${
                           answers.deliveryFrequency === opt.key
                             ? 'bg-emerald-500/10 border-emerald-400/80 text-emerald-700 dark:text-emerald-300'
                             : 'bg-slate-100/50 dark:bg-slate-950/40 border-slate-200 dark:border-white/5 hover:border-slate-700 text-slate-600 dark:text-slate-300'
@@ -396,7 +398,7 @@ export const Onboarding: React.FC = () => {
                       <button
                         key={opt.key}
                         onClick={() => updateAnswer('digitalUsage', opt.key as any)}
-                        className={`p-4 text-left rounded-2xl border transition-all ${
+                        className={`p-4 text-left rounded-2xl border transition-all focus-visible:ring-2 focus-visible:ring-emerald-500 focus:outline-none ${
                           answers.digitalUsage === opt.key
                             ? 'bg-emerald-500/10 border-emerald-400/80 text-emerald-700 dark:text-emerald-300'
                             : 'bg-slate-100/50 dark:bg-slate-950/40 border-slate-200 dark:border-white/5 hover:border-slate-700 text-slate-600 dark:text-slate-300'
@@ -426,7 +428,7 @@ export const Onboarding: React.FC = () => {
                       <button
                         key={opt.key}
                         onClick={() => updateAnswer('wasteGeneration', opt.key as any)}
-                        className={`p-4 text-left rounded-2xl border transition-all ${
+                        className={`p-4 text-left rounded-2xl border transition-all focus-visible:ring-2 focus-visible:ring-emerald-500 focus:outline-none ${
                           answers.wasteGeneration === opt.key
                             ? 'bg-emerald-500/10 border-emerald-400/80 text-emerald-700 dark:text-emerald-300'
                             : 'bg-slate-100/50 dark:bg-slate-950/40 border-slate-200 dark:border-white/5 hover:border-slate-700 text-slate-600 dark:text-slate-300'
@@ -457,7 +459,7 @@ export const Onboarding: React.FC = () => {
                       <button
                         key={opt.key}
                         onClick={() => updateAnswer('yearlyFlights', opt.key as any)}
-                        className={`p-4 text-left rounded-2xl border transition-all ${
+                        className={`p-4 text-left rounded-2xl border transition-all focus-visible:ring-2 focus-visible:ring-emerald-500 focus:outline-none ${
                           answers.yearlyFlights === opt.key
                             ? 'bg-emerald-500/10 border-emerald-400/80 text-emerald-700 dark:text-emerald-300'
                             : 'bg-slate-100/50 dark:bg-slate-950/40 border-slate-200 dark:border-white/5 hover:border-slate-700 text-slate-600 dark:text-slate-300'
@@ -477,19 +479,21 @@ export const Onboarding: React.FC = () => {
               <button
                 onClick={prevStep}
                 disabled={step === 1}
-                className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all ${
+                className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all focus-visible:ring-2 focus-visible:ring-emerald-500 focus:outline-none ${
                   step === 1
                     ? 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed'
                     : 'border-slate-200 dark:border-white/5 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'
                 }`}
+                aria-label="Go back to previous onboarding step"
               >
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="w-4 h-4" aria-hidden="true" />
                 <span>Back</span>
               </button>
 
               <button
                 onClick={nextStep}
-                className="flex items-center gap-1.5 px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl text-slate-950 font-bold text-sm shadow-lg shadow-emerald-500/10 hover:scale-105 active:scale-95 transition-all"
+                className="flex items-center gap-1.5 px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl text-slate-950 font-bold text-sm shadow-lg shadow-emerald-500/10 hover:scale-105 active:scale-95 transition-all focus-visible:ring-2 focus-visible:ring-emerald-500 focus:outline-none"
+                aria-label={step === totalSteps ? 'Complete Lifestyle Scan and view result' : 'Continue to next onboarding step'}
               >
                 <span>{step === totalSteps ? 'Complete Lifestyle Scan' : 'Continue'}</span>
                 <ChevronRight className="w-4 h-4" />

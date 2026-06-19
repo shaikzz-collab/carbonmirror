@@ -37,12 +37,16 @@ export const Dashboard: React.FC = () => {
     );
   }
 
-  // Calculate Shadow Score
-  const maxFootprintValue = 1100;
-  const shadowScore = Math.max(15, Math.min(98, Math.round(100 - (baselineBreakdown.total / maxFootprintValue) * 85)));
+  // Calculate Shadow Score (Memoized)
+  const shadowScore = React.useMemo(() => {
+    const maxFootprintValue = 1100;
+    return Math.max(15, Math.min(98, Math.round(100 - (baselineBreakdown.total / maxFootprintValue) * 85)));
+  }, [baselineBreakdown.total]);
 
-  // Calculate 10-year capsule metrics
-  const capsule10Yr = calculateTimeCapsule(baselineBreakdown, 10);
+  // Calculate 10-year capsule metrics (Memoized)
+  const capsule10Yr = React.useMemo(() => {
+    return calculateTimeCapsule(baselineBreakdown, 10);
+  }, [baselineBreakdown]);
 
   return (
     <div className="space-y-8 animate-fade-in text-slate-800 dark:text-slate-100 font-sans pb-16">
@@ -79,69 +83,108 @@ export const Dashboard: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* 1. Highest Carbon Reduction */}
-            <div className="p-4 rounded-2xl bg-slate-100/50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 space-y-3 relative group">
-              <div className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md inline-block">
-                Max Carbon Cut
+            <div className="p-4 rounded-2xl bg-slate-100/50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 space-y-3 relative group flex flex-col justify-between">
+              <div className="space-y-2">
+                <div className="flex justify-between items-start">
+                  <div className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md inline-block">
+                    Max Carbon Cut
+                  </div>
+                  <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold">{top3Changes.highestReduction.timeline}</span>
+                </div>
+                <h3 className="font-bold text-sm text-slate-700 dark:text-slate-200 line-clamp-1">{top3Changes.highestReduction.name}</h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2">{top3Changes.highestReduction.description}</p>
+                {top3Changes.highestReduction.whyItMatters && (
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500 leading-normal border-l-2 border-emerald-500/30 pl-2 italic">
+                    {top3Changes.highestReduction.whyItMatters}
+                  </p>
+                )}
               </div>
-              <h3 className="font-bold text-sm text-slate-700 dark:text-slate-200 line-clamp-1">{top3Changes.highestReduction.name}</h3>
-              <div className="flex justify-between text-xs pt-1 border-t border-slate-200 dark:border-white/5">
-                <span className="text-slate-500">Savings</span>
-                <span className="font-semibold text-emerald-600 dark:text-emerald-400">-{top3Changes.highestReduction.carbonReduction} kg/yr</span>
+              <div className="space-y-2.5 pt-2">
+                <div className="flex justify-between text-xs pt-1.5 border-t border-slate-200 dark:border-white/5">
+                  <span className="text-slate-500">Savings</span>
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">-{top3Changes.highestReduction.carbonReduction} kg/yr</span>
+                </div>
+                <button
+                  onClick={() => toggleAction(top3Changes.highestReduction.id)}
+                  className={`w-full py-1.5 rounded-xl text-xs font-semibold border transition-all ${
+                    completedActions.includes(top3Changes.highestReduction.id)
+                      ? 'bg-emerald-500 text-slate-950 border-emerald-500 font-bold'
+                      : 'border-slate-200 dark:border-white/5 hover:border-emerald-500/30 text-slate-600 dark:text-slate-300'
+                  }`}
+                >
+                  {completedActions.includes(top3Changes.highestReduction.id) ? '✓ Active Action' : '+ Enroll Action'}
+                </button>
               </div>
-              <button
-                onClick={() => toggleAction(top3Changes.highestReduction.id)}
-                className={`w-full py-1.5 rounded-xl text-xs font-semibold border transition-all ${
-                  completedActions.includes(top3Changes.highestReduction.id)
-                    ? 'bg-emerald-500 text-slate-950 border-emerald-500 font-bold'
-                    : 'border-slate-200 dark:border-white/5 hover:border-emerald-500/30 text-slate-600 dark:text-slate-300'
-                }`}
-              >
-                {completedActions.includes(top3Changes.highestReduction.id) ? '✓ Active Action' : '+ Enroll Action'}
-              </button>
             </div>
 
             {/* 2. Highest Money Saving */}
-            <div className="p-4 rounded-2xl bg-slate-100/50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 space-y-3 relative group">
-              <div className="text-[10px] font-bold text-teal-600 dark:text-teal-400 uppercase tracking-widest bg-teal-500/10 border border-teal-500/20 px-2 py-0.5 rounded-md inline-block">
-                Max Savings
+            <div className="p-4 rounded-2xl bg-slate-100/50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 space-y-3 relative group flex flex-col justify-between">
+              <div className="space-y-2">
+                <div className="flex justify-between items-start">
+                  <div className="text-[10px] font-bold text-teal-600 dark:text-teal-400 uppercase tracking-widest bg-teal-500/10 border border-teal-500/20 px-2 py-0.5 rounded-md inline-block">
+                    Max Savings
+                  </div>
+                  <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold">{top3Changes.highestMoneySaving.timeline}</span>
+                </div>
+                <h3 className="font-bold text-sm text-slate-700 dark:text-slate-200 line-clamp-1">{top3Changes.highestMoneySaving.name}</h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2">{top3Changes.highestMoneySaving.description}</p>
+                {top3Changes.highestMoneySaving.whyItMatters && (
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500 leading-normal border-l-2 border-teal-500/30 pl-2 italic">
+                    {top3Changes.highestMoneySaving.whyItMatters}
+                  </p>
+                )}
               </div>
-              <h3 className="font-bold text-sm text-slate-700 dark:text-slate-200 line-clamp-1">{top3Changes.highestMoneySaving.name}</h3>
-              <div className="flex justify-between text-xs pt-1 border-t border-slate-200 dark:border-white/5">
-                <span className="text-slate-500">Savings</span>
-                <span className="font-semibold text-teal-600 dark:text-teal-400">${top3Changes.highestMoneySaving.moneySavings}/yr</span>
+              <div className="space-y-2.5 pt-2">
+                <div className="flex justify-between text-xs pt-1.5 border-t border-slate-200 dark:border-white/5">
+                  <span className="text-slate-500">Savings</span>
+                  <span className="font-semibold text-teal-600 dark:text-teal-400">${top3Changes.highestMoneySaving.moneySavings}/yr</span>
+                </div>
+                <button
+                  onClick={() => toggleAction(top3Changes.highestMoneySaving.id)}
+                  className={`w-full py-1.5 rounded-xl text-xs font-semibold border transition-all ${
+                    completedActions.includes(top3Changes.highestMoneySaving.id)
+                      ? 'bg-emerald-500 text-slate-950 border-emerald-500 font-bold'
+                      : 'border-slate-200 dark:border-white/5 hover:border-emerald-500/30 text-slate-600 dark:text-slate-300'
+                  }`}
+                >
+                  {completedActions.includes(top3Changes.highestMoneySaving.id) ? '✓ Active Action' : '+ Enroll Action'}
+                </button>
               </div>
-              <button
-                onClick={() => toggleAction(top3Changes.highestMoneySaving.id)}
-                className={`w-full py-1.5 rounded-xl text-xs font-semibold border transition-all ${
-                  completedActions.includes(top3Changes.highestMoneySaving.id)
-                    ? 'bg-emerald-500 text-slate-950 border-emerald-500 font-bold'
-                    : 'border-slate-200 dark:border-white/5 hover:border-emerald-500/30 text-slate-600 dark:text-slate-300'
-                }`}
-              >
-                {completedActions.includes(top3Changes.highestMoneySaving.id) ? '✓ Active Action' : '+ Enroll Action'}
-              </button>
             </div>
 
             {/* 3. Easiest Change */}
-            <div className="p-4 rounded-2xl bg-slate-100/50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 space-y-3 relative group">
-              <div className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded-md inline-block">
-                Easiest Habit Swap
+            <div className="p-4 rounded-2xl bg-slate-100/50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 space-y-3 relative group flex flex-col justify-between">
+              <div className="space-y-2">
+                <div className="flex justify-between items-start">
+                  <div className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded-md inline-block">
+                    Easiest Habit Swap
+                  </div>
+                  <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold">{top3Changes.easiestChange.timeline}</span>
+                </div>
+                <h3 className="font-bold text-sm text-slate-700 dark:text-slate-200 line-clamp-1">{top3Changes.easiestChange.name}</h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2">{top3Changes.easiestChange.description}</p>
+                {top3Changes.easiestChange.whyItMatters && (
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500 leading-normal border-l-2 border-indigo-500/30 pl-2 italic">
+                    {top3Changes.easiestChange.whyItMatters}
+                  </p>
+                )}
               </div>
-              <h3 className="font-bold text-sm text-slate-700 dark:text-slate-200 line-clamp-1">{top3Changes.easiestChange.name}</h3>
-              <div className="flex justify-between text-xs pt-1 border-t border-slate-200 dark:border-white/5">
-                <span className="text-slate-500">Effort</span>
-                <span className="font-semibold text-indigo-600 dark:text-indigo-400">Low (Level {top3Changes.easiestChange.difficulty})</span>
+              <div className="space-y-2.5 pt-2">
+                <div className="flex justify-between text-xs pt-1.5 border-t border-slate-200 dark:border-white/5">
+                  <span className="text-slate-500">Effort</span>
+                  <span className="font-semibold text-indigo-600 dark:text-indigo-400">Low (Level {top3Changes.easiestChange.difficulty})</span>
+                </div>
+                <button
+                  onClick={() => toggleAction(top3Changes.easiestChange.id)}
+                  className={`w-full py-1.5 rounded-xl text-xs font-semibold border transition-all ${
+                    completedActions.includes(top3Changes.easiestChange.id)
+                      ? 'bg-emerald-500 text-slate-950 border-emerald-500 font-bold'
+                      : 'border-slate-200 dark:border-white/5 hover:border-emerald-500/30 text-slate-600 dark:text-slate-300'
+                  }`}
+                >
+                  {completedActions.includes(top3Changes.easiestChange.id) ? '✓ Active Action' : '+ Enroll Action'}
+                </button>
               </div>
-              <button
-                onClick={() => toggleAction(top3Changes.easiestChange.id)}
-                className={`w-full py-1.5 rounded-xl text-xs font-semibold border transition-all ${
-                  completedActions.includes(top3Changes.easiestChange.id)
-                    ? 'bg-emerald-500 text-slate-950 border-emerald-500 font-bold'
-                    : 'border-slate-200 dark:border-white/5 hover:border-emerald-500/30 text-slate-600 dark:text-slate-300'
-                }`}
-              >
-                {completedActions.includes(top3Changes.easiestChange.id) ? '✓ Active Action' : '+ Enroll Action'}
-              </button>
             </div>
           </div>
         </div>
@@ -162,7 +205,12 @@ export const Dashboard: React.FC = () => {
             {/* Circular Gauge */}
             <div className="relative w-40 h-40 flex items-center justify-center">
               {/* SVG Background Ring */}
-              <svg className="w-full h-full transform -rotate-90">
+              <svg 
+                className="w-full h-full transform -rotate-90"
+                role="img"
+                aria-label={`Carbon Shadow Score circular gauge representing your current index score of ${shadowScore} out of 100.`}
+              >
+                <title>Carbon Shadow Score Gauge</title>
                 <circle
                   cx="80"
                   cy="80"
@@ -257,7 +305,13 @@ export const Dashboard: React.FC = () => {
           <div className="flex flex-col sm:flex-row items-center gap-6">
             {/* SVG Pie Chart */}
             <div className="w-32 h-32 relative flex-shrink-0">
-              <svg className="w-full h-full" viewBox="0 0 36 36">
+              <svg 
+                className="w-full h-full" 
+                viewBox="0 0 36 36"
+                role="img"
+                aria-label={`Category Distribution pie chart: Transport ${carbonDNA.contributions.transport}%, Diet ${carbonDNA.contributions.food}%, Energy ${carbonDNA.contributions.energy}%, Goods ${carbonDNA.contributions.shopping + carbonDNA.contributions.delivery}%, Digital ${carbonDNA.contributions.digital}%.`}
+              >
+                <title>Category Distribution Chart</title>
                 {/* We will draw a simple stacked ring represent 5 categories */}
                 {/* 1. Transport */}
                 <circle cx="18" cy="18" r="15.915" fill="none" stroke="#60a5fa" strokeWidth="3.5" strokeDasharray={`${carbonDNA.contributions.transport} ${100 - carbonDNA.contributions.transport}`} strokeDashoffset="25" />
@@ -319,7 +373,14 @@ export const Dashboard: React.FC = () => {
 
           {/* Sparkline chart */}
           <div className="h-32 w-full pt-4 relative">
-            <svg className="w-full h-full" viewBox="0 0 100 30" preserveAspectRatio="none">
+            <svg 
+              className="w-full h-full" 
+              viewBox="0 0 100 30" 
+              preserveAspectRatio="none"
+              role="img"
+              aria-label="Weekly Shadow Score trend sparkline showing progressive 4% improvement over the last 6 weeks."
+            >
+              <title>Weekly Trend Chart</title>
               <defs>
                 <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#10b981" stopOpacity="0.2" />

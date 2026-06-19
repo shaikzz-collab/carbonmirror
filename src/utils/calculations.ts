@@ -70,41 +70,56 @@ const WASTE_BASELINE = {
  * Calculates baseline monthly footprint breakdown in kg CO2e
  */
 export function calculateBaseline(answers: LifestyleAnswers): FootprintBreakdown {
+  // Defensive fallbacks for all inputs to prevent NaN or divide-by-zero crashes
+  const safeAnswers = {
+    commuteStyle: answers?.commuteStyle || 'bike_walk',
+    commuteDistance: Math.max(0, Math.min(300, Number(answers?.commuteDistance) || 0)),
+    dietStyle: answers?.dietStyle || 'balanced',
+    localFood: Boolean(answers?.localFood),
+    electricityBill: Math.max(0, Math.min(1000, Number(answers?.electricityBill) || 0)),
+    greenEnergy: Boolean(answers?.greenEnergy),
+    acUsage: answers?.acUsage || 'optimized',
+    onlinePurchases: answers?.onlinePurchases || 'weekly',
+    deliveryFrequency: answers?.deliveryFrequency || 'weekly',
+    digitalUsage: answers?.digitalUsage || 'moderate',
+    wasteGeneration: answers?.wasteGeneration || 'partial',
+    yearlyFlights: answers?.yearlyFlights || 'few'
+  };
+
   // 1. Transport
-  const commuteMilesPerMonth = answers.commuteDistance * 4.33; // average weeks per month
-  const commuteEmissions = commuteMilesPerMonth * EMISSION_FACTORS.commute[answers.commuteStyle];
-  const flightEmissions = EMISSION_FACTORS.flights[answers.yearlyFlights] / 12; // monthly share
+  const commuteMilesPerMonth = safeAnswers.commuteDistance * 4.33; // average weeks per month
+  const commuteEmissions = commuteMilesPerMonth * (EMISSION_FACTORS.commute[safeAnswers.commuteStyle] || 0);
+  const flightEmissions = (EMISSION_FACTORS.flights[safeAnswers.yearlyFlights] || 0) / 12; // monthly share
   const transport = commuteEmissions + flightEmissions;
 
   // 2. Food
-  let food = EMISSION_FACTORS.diet[answers.dietStyle];
-  if (answers.localFood) {
+  let food = EMISSION_FACTORS.diet[safeAnswers.dietStyle] || 160;
+  if (safeAnswers.localFood) {
     food = food * 0.9; // 10% reduction for local sourcing
   }
 
   // 3. Home Energy
-  let energyEmissions = answers.electricityBill * EMISSION_FACTORS.electricityPerDollar;
-  if (answers.greenEnergy) {
+  let energyEmissions = safeAnswers.electricityBill * EMISSION_FACTORS.electricityPerDollar;
+  if (safeAnswers.greenEnergy) {
     energyEmissions = energyEmissions * EMISSION_FACTORS.greenEnergyMultiplier;
   }
-  const acEmissions = EMISSION_FACTORS.ac[answers.acUsage];
+  const acEmissions = EMISSION_FACTORS.ac[safeAnswers.acUsage] || 25;
   const energy = energyEmissions + acEmissions;
 
   // 4. Shopping
-  const shopping = EMISSION_FACTORS.shopping[answers.onlinePurchases];
+  const shopping = EMISSION_FACTORS.shopping[safeAnswers.onlinePurchases] || 60;
 
   // 5. Delivery
-  const delivery = EMISSION_FACTORS.delivery[answers.deliveryFrequency];
+  const delivery = EMISSION_FACTORS.delivery[safeAnswers.deliveryFrequency] || 35;
 
   // 6. Digital
-  const digital = EMISSION_FACTORS.digital[answers.digitalUsage];
+  const digital = EMISSION_FACTORS.digital[safeAnswers.digitalUsage] || 9;
 
   // Waste Calculation
-  const monthlyWaste = WASTE_BASELINE.recycle[answers.wasteGeneration];
+  const monthlyWaste = WASTE_BASELINE.recycle[safeAnswers.wasteGeneration] || 22;
   const wasteEmissions = monthlyWaste * EMISSION_FACTORS.wastePerKg;
 
-  // Combine waste emissions into shopping / food / general categories or distribute it
-  // Let's keep it separate in types, but add waste factor to total footprint
+  // Combine waste emissions into shopping / food / general categories
   const total = transport + food + energy + shopping + delivery + digital + wasteEmissions;
 
   return {
@@ -302,7 +317,7 @@ export function detectHotspot(breakdown: FootprintBreakdown) {
 /**
  * Generates custom interventions based on user answers and DNA
  */
-export function generateInterventions(answers: LifestyleAnswers, _dna: CarbonDNAType): Intervention[] {
+export function generateInterventions(answers: LifestyleAnswers, dna: CarbonDNAType): Intervention[] {
   const list: Intervention[] = [];
 
   // Transport
@@ -318,7 +333,11 @@ export function generateInterventions(answers: LifestyleAnswers, _dna: CarbonDNA
       timeCommitment: 2,
       confidence: 90,
       effortLevel: 'Medium',
-      timeline: 'Immediate'
+      timeline: 'Immediate',
+      whyItMatters: dna === 'The Commuter'
+        ? `Since you commute ${answers.commuteDistance} miles/week in a gas car, single-occupancy driving is your primary hotspot. This shift targets your largest emission source directly.`
+        : 'Public transit emissions per passenger mile are up to 80% lower than a standard gasoline car, helping clean up your transport footprint.',
+      expectedImpact: 'Saves 450 kg CO2e and $380 annually by reducing fuel consumption and vehicle wear-and-tear.'
     });
     list.push({
       id: 'transit_2',
@@ -331,7 +350,11 @@ export function generateInterventions(answers: LifestyleAnswers, _dna: CarbonDNA
       timeCommitment: 0,
       confidence: 95,
       effortLevel: 'High',
-      timeline: '6 Months'
+      timeline: '6 Months',
+      whyItMatters: dna === 'The Commuter'
+        ? `Commuting ${answers.commuteDistance} miles/week in a gas vehicle makes you an ideal candidate for electrification. Switching completely eliminates tailpipe emissions.`
+        : 'Replacing combustion fuel with grid electricity (especially with a green power plan) dramatically reduces travel emissions.',
+      expectedImpact: 'Saves 1,800 kg CO2e and $950 in fuel/maintenance annually, transforming your primary transport footprint.'
     });
   } else if (answers.commuteStyle === 'car_hybrid' || answers.commuteStyle === 'car_ev') {
     list.push({
@@ -345,7 +368,11 @@ export function generateInterventions(answers: LifestyleAnswers, _dna: CarbonDNA
       timeCommitment: 1,
       confidence: 85,
       effortLevel: 'Low',
-      timeline: '1 Month'
+      timeline: '1 Month',
+      whyItMatters: dna === 'The Commuter'
+        ? `Even with a hybrid or electric vehicle, carpooling splits energy/grid overhead and reduces congestion for your ${answers.commuteDistance} miles/week routine.`
+        : 'Sharing commutes cuts vehicle occupancy emissions in half for the shared day, while saving on tolls and parking.',
+      expectedImpact: 'Saves 180 kg CO2e and $120 annually in shared fuel or energy costs with minimal routine adjustment.'
     });
   }
 
@@ -361,7 +388,11 @@ export function generateInterventions(answers: LifestyleAnswers, _dna: CarbonDNA
       timeCommitment: 3,
       confidence: 90,
       effortLevel: 'Low',
-      timeline: 'Immediate'
+      timeline: 'Immediate',
+      whyItMatters: dna === 'The Frequent Flyer'
+        ? 'As a Frequent Flyer, aviation is your primary carbon driver. Bypassing even one short-haul flight avoids high-altitude radiative forcing.'
+        : 'High-speed rail produces up to 90% fewer emissions than flying for regional distances, while delivering you directly to city centers.',
+      expectedImpact: 'Saves 350 kg CO2e and $80 per flight, bypassing heavy jet fuel consumption.'
     });
   }
 
@@ -378,7 +409,11 @@ export function generateInterventions(answers: LifestyleAnswers, _dna: CarbonDNA
       timeCommitment: 0,
       confidence: 92,
       effortLevel: 'Medium',
-      timeline: '1 Month'
+      timeline: '1 Month',
+      whyItMatters: dna === 'The Foodie'
+        ? 'As a Foodie with a meat-heavy diet, agricultural supply chains (especially red meat) are a major hotspot. Plant-based days target this directly.'
+        : 'Replacing red meat with grains, legumes, or poultry cuts dietary carbon footprint, water usage, and agricultural runoff.',
+      expectedImpact: 'Saves 580 kg CO2e and $420 annually, while lowering cholesterol and reducing food budget overhead.'
     });
   } else if (answers.dietStyle === 'balanced') {
     list.push({
@@ -392,7 +427,11 @@ export function generateInterventions(answers: LifestyleAnswers, _dna: CarbonDNA
       timeCommitment: 0,
       confidence: 88,
       effortLevel: 'Medium',
-      timeline: '1 Month'
+      timeline: '1 Month',
+      whyItMatters: dna === 'The Foodie'
+        ? 'Since your food choices represent a key portion of your footprint, removing meat is the single most effective dietary change you can make.'
+        : 'A vegetarian diet dramatically reduces land-use pressure, nitrogen fertilizer emissions, and animal agriculture methane.',
+      expectedImpact: 'Saves 400 kg CO2e and $300 annually, significantly shrinking your household ecological footprint.'
     });
   }
 
@@ -408,7 +447,9 @@ export function generateInterventions(answers: LifestyleAnswers, _dna: CarbonDNA
       timeCommitment: 1.5,
       confidence: 80,
       effortLevel: 'Low',
-      timeline: '1 Month'
+      timeline: '1 Month',
+      whyItMatters: 'You currently do not prioritize local food. Purchasing regional items cuts transportation emissions ("food miles") from the supply chain.',
+      expectedImpact: 'Saves 120 kg CO2e annually, though local or organic items may cost slightly more (approx. $50/yr).'
     });
   }
 
@@ -425,7 +466,11 @@ export function generateInterventions(answers: LifestyleAnswers, _dna: CarbonDNA
       timeCommitment: 0.5,
       confidence: 99,
       effortLevel: 'Low',
-      timeline: 'Immediate'
+      timeline: 'Immediate',
+      whyItMatters: dna === 'The Comfort Seeker'
+        ? 'As a Comfort Seeker with grid-tied heating and cooling, switching to green power cleanses your heavy HVAC utility usage instantly.'
+        : 'Transitioning to 100% wind/solar matching completely decouples your home appliances and electronics from grid fossil fuels.',
+      expectedImpact: 'Saves 980 kg CO2e annually, offsetting nearly all grid-tied emissions from your utility bill.'
     });
   }
 
@@ -441,7 +486,11 @@ export function generateInterventions(answers: LifestyleAnswers, _dna: CarbonDNA
       timeCommitment: 0,
       confidence: 90,
       effortLevel: 'Low',
-      timeline: 'Immediate'
+      timeline: 'Immediate',
+      whyItMatters: dna === 'The Comfort Seeker'
+        ? 'Your comfort-first cooling pattern draws heavy grid loads. Adjusting by just 2°F reduces compressor workload significantly.'
+        : 'Slight thermostat adjustments yield double-digit percentage drops in utility cooling and heating loads.',
+      expectedImpact: 'Saves 240 kg CO2e and $150 in annual utility bills without requiring hardware upgrades.'
     });
   }
 
@@ -456,7 +505,9 @@ export function generateInterventions(answers: LifestyleAnswers, _dna: CarbonDNA
     timeCommitment: 1,
     confidence: 95,
     effortLevel: 'Low',
-    timeline: 'Immediate'
+    timeline: 'Immediate',
+    whyItMatters: 'Unplugging phantom power draw and upgrading to LED lighting targets low-hanging energy waste in standard households.',
+    expectedImpact: 'Saves 110 kg CO2e and $75 annually, with a payback period of just a few months.'
   });
 
   // Shopping & Delivery
@@ -472,7 +523,11 @@ export function generateInterventions(answers: LifestyleAnswers, _dna: CarbonDNA
       timeCommitment: 0,
       confidence: 85,
       effortLevel: 'Low',
-      timeline: 'Immediate'
+      timeline: 'Immediate',
+      whyItMatters: dna === 'The Consumer'
+        ? 'As a Consumer with high online purchasing habits, this rule disrupts impulse shopping, avoiding manufacturing and logistics overhead.'
+        : 'Limiting discretionary shipping and manufacturing processes curbs upstream carbon and household packaging waste.',
+      expectedImpact: 'Saves 320 kg CO2e and $650 annually by preventing unnecessary online purchases.'
     });
   }
 
@@ -488,7 +543,9 @@ export function generateInterventions(answers: LifestyleAnswers, _dna: CarbonDNA
       timeCommitment: 2,
       confidence: 90,
       effortLevel: 'Medium',
-      timeline: '1 Month'
+      timeline: '1 Month',
+      whyItMatters: 'Frequent takeout courier trips and disposable containers stack up. Home-cooked meals skip courier fuel and packaging waste.',
+      expectedImpact: 'Saves 210 kg CO2e and $450 annually, while promoting healthier eating habits.'
     });
   }
 
@@ -505,7 +562,11 @@ export function generateInterventions(answers: LifestyleAnswers, _dna: CarbonDNA
       timeCommitment: 1,
       confidence: 90,
       effortLevel: 'Low',
-      timeline: 'Immediate'
+      timeline: 'Immediate',
+      whyItMatters: answers.wasteGeneration === 'none'
+        ? 'You currently do not recycle. Diverting paper, glass, metals, and plastics from landfills prevents long-term methane generation.'
+        : 'Improving your recycling habits from partial to full ensures clean sorting and prevents resource contamination.',
+      expectedImpact: 'Saves 160 kg CO2e and $20 annually, diverting tons of recyclable materials from municipal landfills.'
     });
   }
 
@@ -522,7 +583,11 @@ export function generateInterventions(answers: LifestyleAnswers, _dna: CarbonDNA
       timeCommitment: 0,
       confidence: 95,
       effortLevel: 'Low',
-      timeline: 'Immediate'
+      timeline: 'Immediate',
+      whyItMatters: dna === 'The Digital Streamer'
+        ? 'As a Digital Streamer, server farm processing and network infrastructure load are your primary contributors. HD streaming reduces this load by 75%.'
+        : 'Reducing high-bandwidth cloud traffic lowers data center processing and cooling demands behind the screen.',
+      expectedImpact: 'Saves 60 kg CO2e annually without any subscription cost modifications.'
     });
   }
 
@@ -539,7 +604,9 @@ export function generateInterventions(answers: LifestyleAnswers, _dna: CarbonDNA
       timeCommitment: 1.5,
       confidence: 90,
       effortLevel: 'Low',
-      timeline: 'Immediate'
+      timeline: 'Immediate',
+      whyItMatters: 'Over 90% of a washing machine\'s energy goes to heating water. Air drying eliminates the high heating element load of a dryer.',
+      expectedImpact: 'Saves 190 kg CO2e and $85 annually, while extending the lifespan of your garments.'
     });
   }
 

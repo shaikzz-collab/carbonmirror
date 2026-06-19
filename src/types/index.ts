@@ -69,6 +69,8 @@ export interface Intervention {
   confidence: number; // percentage (e.g. 90)
   effortLevel: 'Low' | 'Medium' | 'High';
   timeline: string; // e.g. "Immediate", "1 Month", "6 Months"
+  whyItMatters?: string;
+  expectedImpact?: string;
 }
 
 export interface TimeCapsuleMetrics {

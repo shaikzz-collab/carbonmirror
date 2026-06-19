@@ -1,19 +1,39 @@
 import React from 'react';
 import { AppProvider, useApp } from './context/AppContext';
+import { ErrorBoundary } from './components/ErrorBoundary';
+
+// Keep Landing, Onboarding, OnboardingResult, and Dashboard synchronous as they form the critical rendering path
 import { LandingPage } from './pages/LandingPage';
 import { Onboarding } from './pages/Onboarding';
 import { OnboardingResult } from './pages/OnboardingResult';
 import { Dashboard } from './pages/Dashboard';
-import { CarbonDNAPage } from './pages/CarbonDNAPage';
-import { CarbonReceiptPage } from './pages/CarbonReceiptPage';
-import { FutureTwin } from './pages/FutureTwin';
-import { DecisionAssistant } from './pages/DecisionAssistant';
-import { ClimateCoach } from './pages/ClimateCoach';
-import { ActionPlanPage } from './pages/ActionPlanPage';
-import { ChallengeSystem } from './pages/ChallengeSystem';
-import { TrendsPage } from './pages/TrendsPage';
-import { CommunityHub } from './pages/CommunityHub';
-import { SettingsPage } from './pages/SettingsPage';
+
+// Lazy load secondary sub-pages to optimize bundle sizes
+const CarbonDNAPage = React.lazy(() => import('./pages/CarbonDNAPage').then(m => ({ default: m.CarbonDNAPage })));
+const CarbonReceiptPage = React.lazy(() => import('./pages/CarbonReceiptPage').then(m => ({ default: m.CarbonReceiptPage })));
+const FutureTwin = React.lazy(() => import('./pages/FutureTwin').then(m => ({ default: m.FutureTwin })));
+const DecisionAssistant = React.lazy(() => import('./pages/DecisionAssistant').then(m => ({ default: m.DecisionAssistant })));
+const ClimateCoach = React.lazy(() => import('./pages/ClimateCoach').then(m => ({ default: m.ClimateCoach })));
+const ActionPlanPage = React.lazy(() => import('./pages/ActionPlanPage').then(m => ({ default: m.ActionPlanPage })));
+const ChallengeSystem = React.lazy(() => import('./pages/ChallengeSystem').then(m => ({ default: m.ChallengeSystem })));
+const TrendsPage = React.lazy(() => import('./pages/TrendsPage').then(m => ({ default: m.TrendsPage })));
+const CommunityHub = React.lazy(() => import('./pages/CommunityHub').then(m => ({ default: m.CommunityHub })));
+const SettingsPage = React.lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
+
+const PageSkeleton: React.FC = () => (
+  <div className="space-y-8 animate-pulse font-sans w-full" aria-hidden="true">
+    <div className="space-y-3">
+      <div className="h-8 bg-slate-200 dark:bg-slate-800 rounded-lg w-1/3" />
+      <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded-lg w-1/2" />
+    </div>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="h-32 bg-slate-200 dark:bg-slate-800 rounded-2xl" />
+      <div className="h-32 bg-slate-200 dark:bg-slate-800 rounded-2xl" />
+      <div className="h-32 bg-slate-200 dark:bg-slate-800 rounded-2xl" />
+    </div>
+    <div className="h-64 bg-slate-200 dark:bg-slate-800 rounded-3xl" />
+  </div>
+);
 
 import {
   LayoutDashboard,
@@ -299,17 +319,21 @@ function AppContent() {
 
       {/* MAIN CONTENT WORKSPACE */}
       <main className="flex-grow relative z-10 px-6 py-8 md:px-10 md:py-12 overflow-y-auto max-w-full">
-        {activeTab === 'dashboard' && <Dashboard />}
-        {activeTab === 'dna' && <CarbonDNAPage />}
-        {activeTab === 'receipt' && <CarbonReceiptPage />}
-        {activeTab === 'future' && <FutureTwin />}
-        {activeTab === 'decision' && <DecisionAssistant />}
-        {activeTab === 'coach' && <ClimateCoach />}
-        {activeTab === 'actions' && <ActionPlanPage />}
-        {activeTab === 'challenges' && <ChallengeSystem />}
-        {activeTab === 'trends' && <TrendsPage />}
-        {activeTab === 'community' && <CommunityHub />}
-        {activeTab === 'settings' && <SettingsPage />}
+        <ErrorBoundary fallbackMessage="Failed to load page content. Please try reloading the page.">
+          <React.Suspense fallback={<PageSkeleton />}>
+            {activeTab === 'dashboard' && <Dashboard />}
+            {activeTab === 'dna' && <CarbonDNAPage />}
+            {activeTab === 'receipt' && <CarbonReceiptPage />}
+            {activeTab === 'future' && <FutureTwin />}
+            {activeTab === 'decision' && <DecisionAssistant />}
+            {activeTab === 'coach' && <ClimateCoach />}
+            {activeTab === 'actions' && <ActionPlanPage />}
+            {activeTab === 'challenges' && <ChallengeSystem />}
+            {activeTab === 'trends' && <TrendsPage />}
+            {activeTab === 'community' && <CommunityHub />}
+            {activeTab === 'settings' && <SettingsPage />}
+          </React.Suspense>
+        </ErrorBoundary>
       </main>
     </div>
   );

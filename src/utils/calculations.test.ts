@@ -125,6 +125,42 @@ describe('Carbon Mirror Platform calculations', () => {
       expect(capsule.garbageTrucks).toBeGreaterThan(0);
       expect(capsule.forestAcres).toBeGreaterThan(0);
     });
+
+    it('should handle zero carbon breakdown inputs without crashing or dividing by zero', () => {
+      const zeroBreakdown = {
+        transport: 0,
+        food: 0,
+        energy: 0,
+        shopping: 0,
+        delivery: 0,
+        digital: 0,
+        total: 0,
+        waste: 0
+      };
+      const capsule = calculateTimeCapsule(zeroBreakdown, 5);
+      expect(capsule.years).toBe(5);
+      expect(capsule.co2SwimmingPools).toBe(0);
+      expect(capsule.garbageTrucks).toBe(0);
+      expect(capsule.forestAcres).toBe(0);
+      expect(capsule.coalTons).toBe(0);
+      expect(capsule.smartphonesCharged).toBe(0);
+    });
+
+    it('should scale compounding metrics safely for extremely large footprints', () => {
+      const hugeBreakdown = {
+        transport: 99999,
+        food: 99999,
+        energy: 99999,
+        shopping: 99999,
+        delivery: 99999,
+        digital: 99999,
+        total: 600000,
+        waste: 99999
+      };
+      const capsule = calculateTimeCapsule(hugeBreakdown, 10);
+      expect(capsule.co2SwimmingPools).toBeGreaterThan(1000);
+      expect(capsule.garbageTrucks).toBeGreaterThan(100);
+    });
   });
 
   describe('simulateFuturePaths', () => {
@@ -135,6 +171,31 @@ describe('Carbon Mirror Platform calculations', () => {
       expect(paths).toHaveLength(3);
       expect(paths[2].projections.oneYear.carbon).toBeLessThan(paths[0].projections.oneYear.carbon);
       expect(paths[2].projections.oneYear.moneySaved).toBeGreaterThan(0);
+    });
+
+    it('should handle empty interventions list by projecting zero savings while not crashing', () => {
+      const breakdown = calculateBaseline(mockAnswersEco);
+      const paths = simulateFuturePaths(breakdown, []);
+      expect(paths).toHaveLength(3);
+      // Path C should have 0 savings, matching Path A emissions
+      expect(paths[2].projections.oneYear.carbon).toBe(breakdown.total * 12);
+      expect(paths[2].projections.oneYear.moneySaved).toBe(0);
+    });
+  });
+
+  describe('generateInterventions metadata', () => {
+    it('should populate whyItMatters and expectedImpact for all generated interventions', () => {
+      const list = generateInterventions(mockAnswersStandard, 'The Commuter');
+      expect(list.length).toBeGreaterThan(0);
+      list.forEach(intervention => {
+        expect(intervention.whyItMatters).toBeDefined();
+        expect(typeof intervention.whyItMatters).toBe('string');
+        expect(intervention.whyItMatters!.length).toBeGreaterThan(10);
+
+        expect(intervention.expectedImpact).toBeDefined();
+        expect(typeof intervention.expectedImpact).toBe('string');
+        expect(intervention.expectedImpact!.length).toBeGreaterThan(10);
+      });
     });
   });
 

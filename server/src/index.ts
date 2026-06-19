@@ -3,11 +3,16 @@ import cors from 'cors';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { initDb, run, get, all } from './db.js';
 import { authenticateToken } from './middleware/auth.js';
 import type { AuthRequest } from './middleware/auth.js';
 
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -314,6 +319,18 @@ app.post('/api/user/sync', authenticateToken, async (req: AuthRequest, res) => {
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
+});
+
+// Serve static assets from the frontend build directory
+app.use(express.static(path.join(__dirname, '../../dist')));
+
+// Fallback all other routes to index.html (for client-side routing)
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api')) {
+    next();
+    return;
+  }
+  res.sendFile(path.join(__dirname, '../../dist/index.html'));
 });
 
 app.listen(PORT, () => {

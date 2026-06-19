@@ -175,10 +175,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [badges, setBadges] = useState<Badge[]>(DEFAULT_BADGES);
   const [streak, setStreak] = useState<number>(1);
 
-  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
-    const data = safeGetItem<string>('cm_theme', 'dark');
-    return data === 'light' ? 'light' : 'dark';
-  });
+  const [theme, setTheme] = useState<'dark' | 'light'>('light');
 
   const [chatHistory, setChatHistory] = useState<CoachMessage[]>(INITIAL_COACH_MESSAGES);
 
@@ -539,7 +536,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const toggleTheme = () => {
-    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
+    setTheme('light');
   };
 
   const sendMessageToCoach = (text: string) => {

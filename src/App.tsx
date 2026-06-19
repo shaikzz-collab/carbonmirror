@@ -49,8 +49,6 @@ import {
   Settings,
   Leaf,
   Flame,
-  Sun,
-  Moon,
   Menu,
   X,
   LogOut
@@ -64,7 +62,6 @@ function AppContent() {
     activeTab,
     setActiveTab,
     theme,
-    toggleTheme,
     streak,
     carbonDNA
   } = useApp();
@@ -217,20 +214,11 @@ function AppContent() {
               )}
             </div>
           )}
-          <div className="flex justify-between items-center text-xs">
-            <div className="flex items-center gap-1 text-orange-500 dark:text-orange-600 dark:text-orange-400 font-bold">
-              <Flame className="w-4 h-4 fill-orange-400/10" />
+          <div className="flex justify-center items-center text-xs py-1">
+            <div className="flex items-center gap-1.5 text-orange-600 font-bold bg-orange-50 px-3 py-1.5 rounded-xl border border-orange-100/50">
+              <Flame className="w-4 h-4 fill-orange-400/10 animate-pulse" />
               <span>{streak} Day Streak</span>
             </div>
-            <button
-              onClick={toggleTheme}
-              className={`p-1.5 rounded-lg border ${
-                theme === 'dark' ? 'border-slate-200 dark:border-white/5 text-yellow-400 hover:bg-slate-800' : 'border-slate-200 text-indigo-500 hover:bg-slate-100'
-              }`}
-              aria-label="Toggle Light/Dark Theme"
-            >
-              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </button>
           </div>
           <button
             onClick={logout}
@@ -290,26 +278,14 @@ function AppContent() {
               <div className="flex gap-2">
                 <button
                   onClick={() => {
-                    toggleTheme();
-                    setMobileMenuOpen(false);
-                  }}
-                  className={`p-2 rounded-xl border ${
-                    theme === 'dark' ? 'border-slate-200 dark:border-white/5 text-yellow-400' : 'border-slate-200 text-indigo-500'
-                  }`}
-                >
-                  {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-                </button>
-                <button
-                  onClick={() => {
                     logout();
                     setMobileMenuOpen(false);
                   }}
-                  className={`p-2 rounded-xl border ${
-                    theme === 'dark' ? 'border-slate-200 dark:border-white/5 text-red-600 dark:text-red-400' : 'border-slate-200 text-red-500'
-                  }`}
+                  className="p-2.5 rounded-xl border border-red-100 hover:bg-red-50 text-red-600 flex items-center gap-2 text-sm font-bold"
                   aria-label="Sign Out"
                 >
                   <LogOut className="w-5 h-5" />
+                  <span>Sign Out</span>
                 </button>
               </div>
             </div>

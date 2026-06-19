@@ -1,0 +1,109 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body {
+    margin: 0;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply transition-colors duration-300 min-h-screen;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+    letter-spacing: -0.02em;
+  }
+}
+
+/* Glassmorphism helpers */
+.glass-card {
+  @apply backdrop-blur-lg border transition-all duration-300 shadow-2xl;
+}
+
+.glass-card-dark {
+  @apply bg-slate-900/65 border-white/10 text-slate-100 hover:border-emerald-500/25;
+}
+
+.glass-card-light {
+  @apply bg-white/85 border-slate-200 text-slate-800 hover:border-emerald-500/25 shadow-slate-100;
+}
+
+/* Custom styled scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-500/30 rounded-full hover:bg-slate-500/50 transition-colors;
+}
+
+/* Hide default scrollbars but keep functional */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Background blob canvas styling */
+.blob-container {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.15;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.dark .blob {
+  opacity: 0.22;
+  filter: blur(120px);
+}
+
+.blob-green {
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.45) 0%, rgba(20, 184, 166, 0.1) 70%);
+}
+
+.blob-indigo {
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.45) 0%, rgba(139, 92, 246, 0.1) 70%);
+}
+
+.blob-cyan {
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.45) 0%, rgba(16, 185, 129, 0.1) 70%);
+}
+
+/* Custom animations helper classes */
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+.animate-slide-up {
+  animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.animate-scale-up {
+  animation: scaleUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+.animate-drift-1 {
+  animation: drift1 25s infinite alternate ease-in-out;
+}
+.animate-drift-2 {
+  animation: drift2 30s infinite alternate ease-in-out;
+}
+.animate-drift-3 {
+  animation: drift3 22s infinite alternate ease-in-out;
+}

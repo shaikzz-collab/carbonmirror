@@ -21,6 +21,25 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_carbon_mirror_token_k
 app.use(cors());
 app.use(express.json());
 
+// Server-side input validation and sanitization utilities
+function sanitizeString(val: any, defaultVal = ''): string {
+  if (val === null || val === undefined || typeof val !== 'string') return defaultVal;
+  return val.trim()
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/\//g, '&#x2F;');
+}
+
+function clampNumber(val: any, min = 0, max = Infinity, fallback = 0): number {
+  if (val === null || val === undefined) return fallback;
+  const num = Number(val);
+  if (isNaN(num)) return fallback;
+  return Math.max(min, Math.min(max, num));
+}
+
 // Initialize database
 initDb()
   .then(() => console.log('Database initialized successfully.'))
@@ -29,13 +48,27 @@ initDb()
 // Auth endpoints
 app.post('/api/auth/register', async (req, res) => {
   const { name, email, password } = req.body;
-  if (!name || !email || !password) {
-    res.status(400).json({ error: 'All fields are required.' });
+  const cleanName = sanitizeString(name);
+  const cleanEmail = sanitizeString(email);
+
+  if (!cleanName || !cleanEmail || !password) {
+    res.status(400).json({ error: 'Name, email, and password are required.' });
+    return;
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(cleanEmail)) {
+    res.status(400).json({ error: 'Invalid email format.' });
+    return;
+  }
+
+  if (password.length < 6) {
+    res.status(400).json({ error: 'Password must be at least 6 characters long.' });
     return;
   }
 
   try {
-    const existingUser = await get('SELECT id FROM users WHERE email = ?', [email]);
+    const existingUser = await get('SELECT id FROM users WHERE email = ?', [cleanEmail]);
     if (existingUser) {
       res.status(400).json({ error: 'User with this email already exists.' });
       return;
@@ -46,15 +79,15 @@ app.post('/api/auth/register', async (req, res) => {
 
     const result = await run(
       'INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)',
-      [name, email, passwordHash]
+      [cleanName, cleanEmail, passwordHash]
     );
 
     const userId = result.lastID;
-    const token = jwt.sign({ id: userId, email, name }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: userId, email: cleanEmail, name: cleanName }, JWT_SECRET, { expiresIn: '7d' });
 
     res.status(201).json({
       token,
-      user: { id: userId, name, email }
+      user: { id: userId, name: cleanName, email: cleanEmail }
     });
   } catch (err: any) {
     res.status(500).json({ error: err.message || 'Internal server error.' });
@@ -135,6 +168,38 @@ app.post('/api/lifestyle', authenticateToken, async (req: AuthRequest, res) => {
   const userId = req.user?.id;
   const answers = req.body;
 
+  if (!answers || typeof answers !== 'object') {
+    res.status(400).json({ error: 'Invalid answers payload.' });
+    return;
+  }
+
+  const validCommutes = ['car_gas', 'car_hybrid', 'car_ev', 'public_transit', 'bike_walk'];
+  const commuteStyle = validCommutes.includes(answers.commuteStyle) ? answers.commuteStyle : 'bike_walk';
+  const commuteDistance = clampNumber(answers.commuteDistance, 0, 300, 0);
+
+  const validDiets = ['meat_heavy', 'balanced', 'vegetarian', 'vegan'];
+  const dietStyle = validDiets.includes(answers.dietStyle) ? answers.dietStyle : 'balanced';
+  const localFood = answers.localFood ? 1 : 0;
+
+  const electricityBill = clampNumber(answers.electricityBill, 0, 1000, 0);
+  const greenEnergy = answers.greenEnergy ? 1 : 0;
+
+  const validAc = ['high', 'optimized', 'low'];
+  const acUsage = validAc.includes(answers.acUsage) ? answers.acUsage : 'optimized';
+
+  const validPurchases = ['daily', 'weekly', 'monthly', 'rarely'];
+  const onlinePurchases = validPurchases.includes(answers.onlinePurchases) ? answers.onlinePurchases : 'weekly';
+  const deliveryFrequency = validPurchases.includes(answers.deliveryFrequency) ? answers.deliveryFrequency : 'weekly';
+
+  const validScreens = ['heavy', 'moderate', 'balanced'];
+  const digitalUsage = validScreens.includes(answers.digitalUsage) ? answers.digitalUsage : 'moderate';
+
+  const validRecycle = ['none', 'partial', 'full'];
+  const wasteGeneration = validRecycle.includes(answers.wasteGeneration) ? answers.wasteGeneration : 'partial';
+
+  const validFlights = ['none', 'few', 'moderate', 'frequent'];
+  const yearlyFlights = validFlights.includes(answers.yearlyFlights) ? answers.yearlyFlights : 'few';
+
   try {
     await run(
       `INSERT INTO lifestyle_answers (
@@ -157,18 +222,18 @@ app.post('/api/lifestyle', authenticateToken, async (req: AuthRequest, res) => {
         yearly_flights=excluded.yearly_flights`,
       [
         userId,
-        answers.commuteStyle,
-        answers.commuteDistance,
-        answers.dietStyle,
-        answers.localFood ? 1 : 0,
-        answers.electricityBill,
-        answers.greenEnergy ? 1 : 0,
-        answers.acUsage,
-        answers.onlinePurchases,
-        answers.deliveryFrequency,
-        answers.digitalUsage,
-        answers.wasteGeneration,
-        answers.yearlyFlights,
+        commuteStyle,
+        commuteDistance,
+        dietStyle,
+        localFood,
+        electricityBill,
+        greenEnergy,
+        acUsage,
+        onlinePurchases,
+        deliveryFrequency,
+        digitalUsage,
+        wasteGeneration,
+        yearlyFlights,
       ]
     );
     res.json({ success: true });
@@ -192,10 +257,25 @@ app.post('/api/receipts', authenticateToken, async (req: AuthRequest, res) => {
   const userId = req.user?.id;
   const { id, name, category, carbon, cost, date } = req.body;
 
+  const cleanId = sanitizeString(id);
+  const cleanName = sanitizeString(name);
+  const cleanDate = sanitizeString(date);
+
+  if (!cleanId || !cleanName || !cleanDate) {
+    res.status(400).json({ error: 'ID, name, and date are required.' });
+    return;
+  }
+
+  const validCategories = ['transport', 'food', 'energy', 'shopping', 'delivery', 'digital', 'waste'];
+  const cleanCategory = validCategories.includes(category) ? category : 'transport';
+
+  const cleanCarbon = clampNumber(carbon, 0, 1000, 0);
+  const cleanCost = clampNumber(cost, 0, 10000, 0);
+
   try {
     await run(
       'INSERT INTO receipt_items (id, user_id, name, category, carbon, cost, date) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [id, userId, name, category, carbon, cost, date]
+      [cleanId, userId, cleanName, cleanCategory, cleanCarbon, cleanCost, cleanDate]
     );
     res.status(201).json({ success: true });
   } catch (err: any) {

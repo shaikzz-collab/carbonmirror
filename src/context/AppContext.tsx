@@ -96,7 +96,7 @@ const INITIAL_COACH_MESSAGES: CoachMessage[] = [
   }
 ];
 
-const groupItemsIntoReceipts = (items: any[]): CarbonReceipt[] => {
+export const groupItemsIntoReceipts = (items: any[]): CarbonReceipt[] => {
   const groups: { [date: string]: ReceiptItem[] } = {};
   items.forEach(item => {
     if (!groups[item.date]) {

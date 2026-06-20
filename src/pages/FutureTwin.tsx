@@ -22,20 +22,21 @@ export const FutureTwin: React.FC = () => {
     );
   }
 
-  // Generate paths
-  const paths = simulateFuturePaths(baselineBreakdown, interventions);
+  // Generate paths (memoized)
+  const paths = React.useMemo(() => simulateFuturePaths(baselineBreakdown, interventions), [baselineBreakdown, interventions]);
 
-  // Time capsule projections
-  const currentCapsule = calculateTimeCapsule(baselineBreakdown, capsuleYears);
+  // Time capsule projections (memoized)
+  const currentCapsule = React.useMemo(() => calculateTimeCapsule(baselineBreakdown, capsuleYears), [baselineBreakdown, capsuleYears]);
 
-  // Calculate sustainable breakdown (Path C)
-  // Let's say Path C reduces carbon footprint by 65% and waste by 70%.
-  const sustainableBreakdown = {
-    ...baselineBreakdown,
-    total: Math.round(baselineBreakdown.total * 0.35),
-    waste: Math.round(baselineBreakdown.waste * 0.30)
-  };
-  const sustainableCapsule = calculateTimeCapsule(sustainableBreakdown, capsuleYears);
+  // Calculate sustainable breakdown (Path C) (memoized)
+  const sustainableCapsule = React.useMemo(() => {
+    const sustainableBreakdown = {
+      ...baselineBreakdown,
+      total: Math.round(baselineBreakdown.total * 0.35),
+      waste: Math.round(baselineBreakdown.waste * 0.30)
+    };
+    return calculateTimeCapsule(sustainableBreakdown, capsuleYears);
+  }, [baselineBreakdown, capsuleYears]);
 
   // Helper to extract values based on active timeframe
   const getPathMetrics = (path: typeof paths[0]) => {

@@ -54,25 +54,44 @@ export const TrendsPage: React.FC = () => {
     { week: 'Today', carbon: baselineBreakdown.total - 25, adherence: 92 }
   ];
 
-  // AI Report calculations
-  const paths = simulateFuturePaths(baselineBreakdown, interventions);
-  const pathAOneYear = paths[0].projections.oneYear; // Inaction
-  const pathCOneYear = paths[2].projections.oneYear; // Sustainable
-  
-  const oneYearRegretCarbon = pathAOneYear.carbon - pathCOneYear.carbon;
-  const oneYearRegretMoney = pathCOneYear.moneySaved;
-  const oneYearRegretWaste = pathAOneYear.waste - pathCOneYear.waste;
+  // AI Report calculations memoized to prevent redundant calculations
+  const {
+    oneYearRegretCarbon,
+    oneYearRegretMoney,
+    oneYearRegretWaste,
+    capsule20YrCurrent,
+    capsule20YrSustainable,
+    activeInterventionsList
+  } = React.useMemo(() => {
+    const paths = simulateFuturePaths(baselineBreakdown, interventions);
+    const pathAOneYear = paths[0].projections.oneYear; // Inaction
+    const pathCOneYear = paths[2].projections.oneYear; // Sustainable
+    
+    const oneYearRegretCarbon = pathAOneYear.carbon - pathCOneYear.carbon;
+    const oneYearRegretMoney = pathCOneYear.moneySaved;
+    const oneYearRegretWaste = pathAOneYear.waste - pathCOneYear.waste;
 
-  const capsule20YrCurrent = calculateTimeCapsule(baselineBreakdown, 20);
-  
-  const sustainableBreakdown = {
-    ...baselineBreakdown,
-    total: Math.round(baselineBreakdown.total * 0.35),
-    waste: Math.round(baselineBreakdown.waste * 0.30)
-  };
-  const capsule20YrSustainable = calculateTimeCapsule(sustainableBreakdown, 20);
+    const capsule20YrCurrent = calculateTimeCapsule(baselineBreakdown, 20);
+    
+    const sustainableBreakdown = {
+      ...baselineBreakdown,
+      total: Math.round(baselineBreakdown.total * 0.35),
+      waste: Math.round(baselineBreakdown.waste * 0.30)
+    };
+    const capsule20YrSustainable = calculateTimeCapsule(sustainableBreakdown, 20);
 
-  const activeInterventionsList = interventions.filter(x => completedActions.includes(x.id));
+    const activeInterventionsList = interventions.filter(x => completedActions.includes(x.id));
+
+    return {
+      paths,
+      oneYearRegretCarbon,
+      oneYearRegretMoney,
+      oneYearRegretWaste,
+      capsule20YrCurrent,
+      capsule20YrSustainable,
+      activeInterventionsList
+    };
+  }, [baselineBreakdown, interventions, completedActions]);
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -135,6 +154,18 @@ export const TrendsPage: React.FC = () => {
             <Calendar className="w-4 h-4 text-slate-500" />
             <span>Past 6 Weeks</span>
           </div>
+        </div>
+
+        {/* Screen Reader Table Alternative */}
+        <div className="sr-only">
+          <p>Weekly carbon footprint and habit adherence history table details:</p>
+          <ul>
+            {weeklyHistory.map(item => (
+              <li key={item.week}>
+                {item.week === 'Today' ? 'Today (estimated)' : item.week}: carbon footprint is {item.carbon} kg CO2e, habit adherence rate is {item.adherence}%.
+              </li>
+            ))}
+          </ul>
         </div>
 
         {/* Dynamic bar charts */}

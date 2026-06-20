@@ -10,6 +10,7 @@ import {
   getDecisionScenarios
 } from './calculations';
 import type { LifestyleAnswers } from '../types';
+import { groupItemsIntoReceipts } from '../context/AppContext';
 
 // Standard baseline user details for mock tests
 const mockAnswersStandard: LifestyleAnswers = {
@@ -205,6 +206,71 @@ describe('Carbon Mirror Platform calculations', () => {
       expect(list).toHaveLength(5);
       expect(list[0].carbonSaved).toBeGreaterThan(0);
       expect(list[0].moneySaved).toBeGreaterThan(0);
+    });
+  });
+
+  describe('groupItemsIntoReceipts', () => {
+    it('should handle an empty list of receipt items by generating a single empty receipt for today', () => {
+      const receipts = groupItemsIntoReceipts([]);
+      expect(receipts).toHaveLength(1);
+      const todayStr = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      expect(receipts[0].date).toBe(todayStr);
+      expect(receipts[0].items).toEqual([]);
+      expect(receipts[0].totalCarbon).toBe(0);
+      expect(receipts[0].totalCost).toBe(0);
+      expect(receipts[0].biggestContributor).toBe('None');
+      expect(receipts[0].explanation).toContain('All daily items cleared');
+    });
+
+    it('should aggregate receipt items by date and calculate totals and biggest contributor', () => {
+      const todayStr = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      const items = [
+        { id: '1', date: todayStr, name: 'Beef Burger', category: 'food', carbon: 8.5, cost: 12.0 },
+        { id: '2', date: todayStr, name: 'Drive Gas Car', category: 'transport', carbon: 15.0, cost: 5.0 },
+        { id: '3', date: todayStr, name: 'Salad', category: 'food', carbon: 0.5, cost: 8.0 }
+      ];
+
+      const receipts = groupItemsIntoReceipts(items);
+      expect(receipts).toHaveLength(1);
+      expect(receipts[0].date).toBe(todayStr);
+      expect(receipts[0].items).toHaveLength(3);
+      expect(receipts[0].totalCarbon).toBe(24.0); // 8.5 + 15.0 + 0.5
+      expect(receipts[0].totalCost).toBe(25.0); // 12.0 + 5.0 + 8.0
+      expect(receipts[0].biggestContributor).toBe('Drive Gas Car');
+      expect(receipts[0].explanation).toContain('totals 24.0 kg CO2e');
+      expect(receipts[0].explanation).toContain('leading driver was "Drive Gas Car" representing 63%');
+    });
+  });
+
+  describe('carbon regret and inaction gap calculations', () => {
+    it('should calculate regret metrics correctly from path projections', () => {
+      const breakdown = {
+        transport: 300,
+        food: 200,
+        energy: 150,
+        shopping: 80,
+        delivery: 40,
+        digital: 20,
+        waste: 30,
+        total: 820
+      };
+      
+      const interventions = [
+        { id: 'int_1', name: 'EV commute', carbonReduction: 100, moneySavings: 50 },
+        { id: 'int_2', name: 'Vegan diet', carbonReduction: 80, moneySavings: 30 }
+      ] as any[];
+
+      const paths = simulateFuturePaths(breakdown, interventions);
+      const pathAOneYear = paths[0].projections.oneYear;
+      const pathCOneYear = paths[2].projections.oneYear;
+
+      const carbonRegret = pathAOneYear.carbon - pathCOneYear.carbon;
+      const moneyRegret = pathCOneYear.moneySaved;
+
+      // totalCarbonSavingsPossible = 180. Path C annual carbon savings = 180 * 0.85 = 153.
+      expect(carbonRegret).toBe(153);
+      // totalMoneySavingsPossible = 80. Path C annual money savings = 80 * 0.85 = 68.
+      expect(moneyRegret).toBe(68);
     });
   });
 

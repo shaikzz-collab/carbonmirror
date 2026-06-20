@@ -3,7 +3,10 @@ import {
   sanitizeString,
   validateProfile,
   validateLifestyleAnswers,
-  validateReceiptItem
+  validateReceiptItem,
+  safeNumber,
+  safeString,
+  safeProfile
 } from './validation';
 
 describe('Validation Utilities', () => {
@@ -171,6 +174,52 @@ describe('Validation Utilities', () => {
 
       const negativeCost = validateReceiptItem({ name: 'Refund', carbon: 0, cost: -100 });
       expect(negativeCost.cost).toBe(0);
+    });
+  });
+
+  describe('safeNumber', () => {
+    it('should fall back to default value when input is null, undefined, or NaN', () => {
+      expect(safeNumber(null, 0, 100, 10)).toBe(10);
+      expect(safeNumber(undefined, 0, 100, 15)).toBe(15);
+      expect(safeNumber('invalid-number', 0, 100, 20)).toBe(20);
+    });
+
+    it('should clamp inputs between min and max parameters', () => {
+      expect(safeNumber(-50, 0, 100, 10)).toBe(0);
+      expect(safeNumber(150, 0, 100, 10)).toBe(100);
+      expect(safeNumber(50, 0, 100, 10)).toBe(50);
+    });
+  });
+
+  describe('safeString', () => {
+    it('should return defaultVal for non-string inputs', () => {
+      expect(safeString(123, 'default')).toBe('default');
+      expect(safeString(null, 'default')).toBe('default');
+      expect(safeString(undefined, 'default')).toBe('default');
+    });
+
+    it('should escape HTML special characters to prevent XSS', () => {
+      expect(safeString('<div>&"\'/</div>')).toBe('&lt;div&gt;&amp;&quot;&#x27;&#x2F;&lt;&#x2F;div&gt;');
+    });
+  });
+
+  describe('safeProfile', () => {
+    it('should return default profile if input is null or not an object', () => {
+      const fallback = safeProfile(null);
+      expect(fallback.name).toBe('Eco Explorer');
+      expect(fallback.email).toBe('explorer@carbonmirror.org');
+    });
+
+    it('should use default values for missing or malformed fields', () => {
+      const partial = safeProfile({ name: 'User', email: 'bad-email' });
+      expect(partial.name).toBe('User');
+      expect(partial.email).toBe('explorer@carbonmirror.org');
+    });
+
+    it('should sanitize name and return safe values', () => {
+      const xss = safeProfile({ name: '<script>alert(1)</script>', email: 'john@doe.com' });
+      expect(xss.name).toBe('&lt;script&gt;alert(1)&lt;&#x2F;script&gt;');
+      expect(xss.email).toBe('john@doe.com');
     });
   });
 });

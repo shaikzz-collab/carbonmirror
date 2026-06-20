@@ -11,30 +11,61 @@ import type {
 } from '../types';
 
 /**
- * Basic HTML sanitization to prevent XSS injection.
+ * Safely sanitizes a string to prevent XSS injection.
  */
-export function sanitizeString(val: string): string {
-  if (typeof val !== 'string') return '';
-  return val
+export function safeString(val: any, defaultVal = ''): string {
+  if (val === null || val === undefined || typeof val !== 'string') return defaultVal;
+  const str = val.trim();
+  return str
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#x27;')
-    .replace(/\//g, '&#x2F;')
-    .trim();
+    .replace(/\//g, '&#x2F;');
 }
 
 /**
- * Validates the user profile properties (name and email).
+ * Basic HTML sanitization alias for backward compatibility.
+ */
+export function sanitizeString(val: string): string {
+  return safeString(val);
+}
+
+/**
+ * Safely parses and bounds numerical inputs.
+ */
+export function safeNumber(val: any, min = 0, max = Infinity, defaultVal = 0): number {
+  if (val === null || val === undefined) return defaultVal;
+  const num = Number(val);
+  if (isNaN(num)) return defaultVal;
+  return Math.max(min, Math.min(max, num));
+}
+
+/**
+ * Safely normalizes user profile data, providing fallback defaults on error.
+ */
+export function safeProfile(profile: any): UserProfile {
+  if (!profile || typeof profile !== 'object') {
+    return { name: 'Eco Explorer', email: 'explorer@carbonmirror.org' };
+  }
+  const name = safeString(profile.name, 'Eco Explorer');
+  const emailRaw = safeString(profile.email, '');
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const email = emailRegex.test(emailRaw) ? emailRaw : 'explorer@carbonmirror.org';
+  return { name, email };
+}
+
+/**
+ * Validates the user profile properties strictly.
  */
 export function validateProfile(profile: any): UserProfile {
   if (!profile || typeof profile !== 'object') {
     throw new Error('Invalid profile data. Must be an object.');
   }
 
-  const name = sanitizeString(profile.name);
-  const email = sanitizeString(profile.email);
+  const name = safeString(profile.name);
+  const email = safeString(profile.email);
 
   if (!name) {
     throw new Error('Name cannot be empty.');
@@ -63,12 +94,7 @@ export function validateLifestyleAnswers(answers: any): LifestyleAnswers {
     : 'bike_walk';
 
   // Validate commuteDistance: clamp between 0 and 300, reject negative/NaN
-  let commuteDistance = Number(answers.commuteDistance);
-  if (isNaN(commuteDistance) || commuteDistance < 0) {
-    commuteDistance = 0;
-  } else if (commuteDistance > 300) {
-    commuteDistance = 300;
-  }
+  const commuteDistance = safeNumber(answers.commuteDistance, 0, 300, 0);
 
   // Validate dietStyle
   const validDiets: DietStyle[] = ['meat_heavy', 'balanced', 'vegetarian', 'vegan'];
@@ -80,12 +106,7 @@ export function validateLifestyleAnswers(answers: any): LifestyleAnswers {
   const localFood = Boolean(answers.localFood);
 
   // Validate electricityBill: clamp between 0 and 1000
-  let electricityBill = Number(answers.electricityBill);
-  if (isNaN(electricityBill) || electricityBill < 0) {
-    electricityBill = 0;
-  } else if (electricityBill > 1000) {
-    electricityBill = 1000;
-  }
+  const electricityBill = safeNumber(answers.electricityBill, 0, 1000, 0);
 
   // Validate greenEnergy
   const greenEnergy = Boolean(answers.greenEnergy);
@@ -149,7 +170,7 @@ export function validateReceiptItem(item: any): Omit<ReceiptItem, 'id'> {
     throw new Error('Invalid receipt item. Must be an object.');
   }
 
-  const name = sanitizeString(item.name);
+  const name = safeString(item.name);
   if (!name) {
     throw new Error('Activity name cannot be empty.');
   }
@@ -165,21 +186,18 @@ export function validateReceiptItem(item: any): Omit<ReceiptItem, 'id'> {
   ];
   const category = validCategories.includes(item.category) ? item.category : 'transport';
 
-  // Validate carbon: must be non-negative, clamp realistic Max
-  let carbon = Number(item.carbon);
-  if (isNaN(carbon) || carbon < 0) {
+  // Validate carbon: must be non-negative, clamp realistic Max of 1000
+  if (item.carbon === null || item.carbon === undefined) {
     throw new Error('Carbon footprint must be a positive number.');
-  } else if (carbon > 1000) {
-    carbon = 1000; // clamp realistic max single receipt carbon
   }
+  const carbonNum = Number(item.carbon);
+  if (isNaN(carbonNum) || carbonNum < 0) {
+    throw new Error('Carbon footprint must be a positive number.');
+  }
+  const carbon = Math.min(1000, carbonNum);
 
-  // Validate cost: must be non-negative, clamp realistic Max
-  let cost = Number(item.cost);
-  if (isNaN(cost) || cost < 0) {
-    cost = 0;
-  } else if (cost > 10000) {
-    cost = 10000;
-  }
+  // Validate cost: must be non-negative, clamp realistic Max of 10000
+  const cost = safeNumber(item.cost, 0, 10000, 0);
 
   return {
     name,

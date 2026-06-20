@@ -15,13 +15,8 @@ function isStorageAvailable(): boolean {
   }
 }
 
-const isAvailable = isStorageAvailable();
-
-/**
- * Validates storage versioning. If schema versions differ, it handles cleanup/migration safely.
- */
 export function initializeStorage(): void {
-  if (!isAvailable) return;
+  if (!isStorageAvailable()) return;
   try {
     const currentVersion = localStorage.getItem(VERSION_KEY);
     if (currentVersion !== STORAGE_VERSION) {
@@ -38,7 +33,7 @@ export function initializeStorage(): void {
  * Safely fetches a value from local storage.
  */
 export function safeGetItem<T>(key: string, defaultValue: T): T {
-  if (!isAvailable) return defaultValue;
+  if (!isStorageAvailable()) return defaultValue;
   try {
     const item = localStorage.getItem(key);
     if (!item) return defaultValue;
@@ -53,7 +48,7 @@ export function safeGetItem<T>(key: string, defaultValue: T): T {
  * Safely writes a value to local storage.
  */
 export function safeSetItem<T>(key: string, value: T): void {
-  if (!isAvailable) return;
+  if (!isStorageAvailable()) return;
   try {
     localStorage.setItem(key, JSON.stringify(value));
   } catch (err) {
@@ -65,7 +60,7 @@ export function safeSetItem<T>(key: string, value: T): void {
  * Safely deletes a key from local storage.
  */
 export function safeRemoveItem(key: string): void {
-  if (!isAvailable) return;
+  if (!isStorageAvailable()) return;
   try {
     localStorage.removeItem(key);
   } catch (err) {
@@ -77,11 +72,25 @@ export function safeRemoveItem(key: string): void {
  * Safely clears all local storage items.
  */
 export function safeClear(): void {
-  if (!isAvailable) return;
+  if (!isStorageAvailable()) return;
   try {
     localStorage.clear();
     localStorage.setItem(VERSION_KEY, STORAGE_VERSION);
   } catch (err) {
     console.error('Failed to clear local storage:', err);
   }
+}
+
+/**
+ * Safe local storage reader wrapper.
+ */
+export function safeStorageRead<T>(key: string, defaultValue: T): T {
+  return safeGetItem<T>(key, defaultValue);
+}
+
+/**
+ * Safe local storage writer wrapper.
+ */
+export function safeStorageWrite<T>(key: string, value: T): void {
+  safeSetItem<T>(key, value);
 }

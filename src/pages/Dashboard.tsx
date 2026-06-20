@@ -23,7 +23,20 @@ export const Dashboard: React.FC = () => {
     setActiveTab
   } = useApp();
 
-  if (!baselineBreakdown || !carbonDNA || !hotspot || !top3Changes) {
+  // Calculate Shadow Score (Memoized)
+  const shadowScore = React.useMemo(() => {
+    if (!baselineBreakdown) return 0;
+    const maxFootprintValue = 1100;
+    return Math.max(15, Math.min(98, Math.round(100 - (baselineBreakdown.total / maxFootprintValue) * 85)));
+  }, [baselineBreakdown]);
+
+  // Calculate 10-year capsule metrics (Memoized)
+  const capsule10Yr = React.useMemo(() => {
+    if (!baselineBreakdown) return null;
+    return calculateTimeCapsule(baselineBreakdown, 10);
+  }, [baselineBreakdown]);
+
+  if (!baselineBreakdown || !carbonDNA || !hotspot || !top3Changes || !capsule10Yr) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[70vh] text-slate-500 dark:text-slate-400 space-y-4">
         <p>No lifestyle footprint profile found. Please run the onboarding scan first.</p>
@@ -36,17 +49,6 @@ export const Dashboard: React.FC = () => {
       </div>
     );
   }
-
-  // Calculate Shadow Score (Memoized)
-  const shadowScore = React.useMemo(() => {
-    const maxFootprintValue = 1100;
-    return Math.max(15, Math.min(98, Math.round(100 - (baselineBreakdown.total / maxFootprintValue) * 85)));
-  }, [baselineBreakdown.total]);
-
-  // Calculate 10-year capsule metrics (Memoized)
-  const capsule10Yr = React.useMemo(() => {
-    return calculateTimeCapsule(baselineBreakdown, 10);
-  }, [baselineBreakdown]);
 
   return (
     <div className="space-y-8 animate-fade-in text-slate-800 dark:text-slate-100 font-sans pb-16">

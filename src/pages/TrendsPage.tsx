@@ -30,29 +30,15 @@ export const TrendsPage: React.FC = () => {
   const [showReport, setShowReport] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  if (!baselineBreakdown || !carbonDNA || !hotspot || !top3Changes) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[70vh] text-slate-500 space-y-4">
-        <p>No lifestyle profile found. Please run the onboarding scan first.</p>
-        <button
-          onClick={() => setActiveTab('onboarding')}
-          className="px-6 py-2.5 bg-emerald-500 rounded-xl text-slate-950 font-bold"
-        >
-          Start Lifestyle Scan
-        </button>
-      </div>
-    );
-  }
-
   // Week-over-week mock data
-  const weeklyHistory = [
+  const weeklyHistory = baselineBreakdown ? [
     { week: 'Wk 21', carbon: baselineBreakdown.total + 30, adherence: 65 },
     { week: 'Wk 22', carbon: baselineBreakdown.total + 18, adherence: 70 },
     { week: 'Wk 23', carbon: baselineBreakdown.total + 10, adherence: 78 },
     { week: 'Wk 24', carbon: baselineBreakdown.total + 5, adherence: 80 },
     { week: 'Wk 25', carbon: baselineBreakdown.total - 12, adherence: 85 },
     { week: 'Today', carbon: baselineBreakdown.total - 25, adherence: 92 }
-  ];
+  ] : [];
 
   // AI Report calculations memoized to prevent redundant calculations
   const {
@@ -63,6 +49,16 @@ export const TrendsPage: React.FC = () => {
     capsule20YrSustainable,
     activeInterventionsList
   } = React.useMemo(() => {
+    if (!baselineBreakdown || !interventions) {
+      return {
+        oneYearRegretCarbon: 0,
+        oneYearRegretMoney: 0,
+        oneYearRegretWaste: 0,
+        capsule20YrCurrent: null,
+        capsule20YrSustainable: null,
+        activeInterventionsList: []
+      };
+    }
     const paths = simulateFuturePaths(baselineBreakdown, interventions);
     const pathAOneYear = paths[0].projections.oneYear; // Inaction
     const pathCOneYear = paths[2].projections.oneYear; // Sustainable
@@ -92,6 +88,20 @@ export const TrendsPage: React.FC = () => {
       activeInterventionsList
     };
   }, [baselineBreakdown, interventions, completedActions]);
+
+  if (!baselineBreakdown || !carbonDNA || !hotspot || !top3Changes || !capsule20YrCurrent || !capsule20YrSustainable) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[70vh] text-slate-500 space-y-4">
+        <p>No lifestyle profile found. Please run the onboarding scan first.</p>
+        <button
+          onClick={() => setActiveTab('onboarding')}
+          className="px-6 py-2.5 bg-emerald-500 rounded-xl text-slate-950 font-bold"
+        >
+          Start Lifestyle Scan
+        </button>
+      </div>
+    );
+  }
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);

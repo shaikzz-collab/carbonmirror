@@ -763,7 +763,8 @@ export function simulateFuturePaths(breakdown: FootprintBreakdown, interventions
 /**
  * Returns Decision Camera comparative choices adjusted by profile
  */
-export function getDecisionScenarios(_answers: LifestyleAnswers): DecisionScenario[] {
+export function getDecisionScenarios(answers: LifestyleAnswers): DecisionScenario[] {
+  if (!answers) return [];
   return [
     {
       id: 'dec_1',

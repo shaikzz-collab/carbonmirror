@@ -3,6 +3,8 @@ import { useApp } from '../context/AppContext';
 import { Plus, Trash2 } from 'lucide-react';
 import type { ReceiptItem } from '../types';
 
+const STATIC_MIRROR_ID = Math.floor(100000 + Math.random() * 900000);
+
 export const CarbonReceiptPage: React.FC = () => {
   const {
     dailyReceipts,
@@ -136,7 +138,7 @@ export const CarbonReceiptPage: React.FC = () => {
                 </span>
               </div>
               <div className="text-[9px] text-slate-500 dark:text-slate-400">
-                MIRROR-ID: {Math.floor(100000 + Math.random() * 900000)}
+                MIRROR-ID: {STATIC_MIRROR_ID}
               </div>
             </div>
           </div>
@@ -194,7 +196,7 @@ export const CarbonReceiptPage: React.FC = () => {
                 <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Category</label>
                 <select
                   value={category}
-                  onChange={(e) => setCategory(e.target.value as any)}
+                  onChange={(e) => setCategory(e.target.value as ReceiptItem['category'])}
                   className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/5 rounded-xl px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-emerald-500/50"
                 >
                   <option value="transport">Transportation</option>

@@ -8,7 +8,30 @@ export const FutureTwin: React.FC = () => {
   const [timeframe, setTimeframe] = useState<'1m' | '6m' | '1y'>('1y');
   const [capsuleYears, setCapsuleYears] = useState<10 | 20 | 50>(20);
 
-  if (!baselineBreakdown || interventions.length === 0) {
+  // Generate paths (memoized)
+  const paths = React.useMemo(() => {
+    if (!baselineBreakdown || interventions.length === 0) return [];
+    return simulateFuturePaths(baselineBreakdown, interventions);
+  }, [baselineBreakdown, interventions]);
+
+  // Time capsule projections (memoized)
+  const currentCapsule = React.useMemo(() => {
+    if (!baselineBreakdown) return null;
+    return calculateTimeCapsule(baselineBreakdown, capsuleYears);
+  }, [baselineBreakdown, capsuleYears]);
+
+  // Calculate sustainable breakdown (Path C) (memoized)
+  const sustainableCapsule = React.useMemo(() => {
+    if (!baselineBreakdown) return null;
+    const sustainableBreakdown = {
+      ...baselineBreakdown,
+      total: Math.round(baselineBreakdown.total * 0.35),
+      waste: Math.round(baselineBreakdown.waste * 0.30)
+    };
+    return calculateTimeCapsule(sustainableBreakdown, capsuleYears);
+  }, [baselineBreakdown, capsuleYears]);
+
+  if (!baselineBreakdown || interventions.length === 0 || paths.length === 0 || !currentCapsule || !sustainableCapsule) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[70vh] text-slate-500 dark:text-slate-400 space-y-4">
         <p>No lifestyle profile found. Please run the onboarding scan first.</p>
@@ -21,22 +44,6 @@ export const FutureTwin: React.FC = () => {
       </div>
     );
   }
-
-  // Generate paths (memoized)
-  const paths = React.useMemo(() => simulateFuturePaths(baselineBreakdown, interventions), [baselineBreakdown, interventions]);
-
-  // Time capsule projections (memoized)
-  const currentCapsule = React.useMemo(() => calculateTimeCapsule(baselineBreakdown, capsuleYears), [baselineBreakdown, capsuleYears]);
-
-  // Calculate sustainable breakdown (Path C) (memoized)
-  const sustainableCapsule = React.useMemo(() => {
-    const sustainableBreakdown = {
-      ...baselineBreakdown,
-      total: Math.round(baselineBreakdown.total * 0.35),
-      waste: Math.round(baselineBreakdown.waste * 0.30)
-    };
-    return calculateTimeCapsule(sustainableBreakdown, capsuleYears);
-  }, [baselineBreakdown, capsuleYears]);
 
   // Helper to extract values based on active timeframe
   const getPathMetrics = (path: typeof paths[0]) => {

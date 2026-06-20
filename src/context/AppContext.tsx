@@ -158,7 +158,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (data) {
       try {
         return validateProfile(data);
-      } catch (err) {
+      } catch {
         safeRemoveItem('cm_user');
         return null;
       }
@@ -179,28 +179,50 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [chatHistory, setChatHistory] = useState<CoachMessage[]>(INITIAL_COACH_MESSAGES);
 
-  // Derived calculations
-  const [baselineBreakdown, setBaselineBreakdown] = useState<FootprintBreakdown | null>(null);
-  const [carbonDNA, setCarbonDNA] = useState<CarbonDNA | null>(null);
-  const [hotspot, setHotspot] = useState<ReturnType<typeof detectHotspot> | null>(null);
-  const [interventions, setInterventions] = useState<Intervention[]>([]);
-  const [top3Changes, setTop3Changes] = useState<ReturnType<typeof selectTop3LifestyleChanges> | null>(null);
+  const logout = () => {
+    safeRemoveItem('cm_token');
+    safeRemoveItem('cm_user');
+    setUser(null);
+    setAnswers(null);
+    setOnboarded(false);
+    setDailyReceipts([]);
+    setCompletedActions([]);
+    setChallenges(DEFAULT_CHALLENGES);
+    setBadges(DEFAULT_BADGES);
+    setStreak(1);
+    setChatHistory(INITIAL_COACH_MESSAGES);
+    setActiveTab('landing');
+  };
 
-  // Recalculate whenever answers change
-  useEffect(() => {
-    if (answers) {
-      const breakdown = calculateBaseline(answers);
-      const dna = classifyCarbonDNA(answers, breakdown);
-      const hot = detectHotspot(breakdown);
-      const list = generateInterventions(answers, dna.type);
-      const top3 = selectTop3LifestyleChanges(list);
-
-      setBaselineBreakdown(breakdown);
-      setCarbonDNA(dna);
-      setHotspot(hot);
-      setInterventions(list);
-      setTop3Changes(top3);
+  // Derived calculations computed purely on answers change to prevent cascading renders
+  const {
+    baselineBreakdown,
+    carbonDNA,
+    hotspot,
+    interventions,
+    top3Changes
+  } = React.useMemo(() => {
+    if (!answers) {
+      return {
+        baselineBreakdown: null,
+        carbonDNA: null,
+        hotspot: null,
+        interventions: [],
+        top3Changes: null
+      };
     }
+    const breakdown = calculateBaseline(answers);
+    const dna = classifyCarbonDNA(answers, breakdown);
+    const hot = detectHotspot(breakdown);
+    const list = generateInterventions(answers, dna.type);
+    const top3 = selectTop3LifestyleChanges(list);
+    return {
+      baselineBreakdown: breakdown,
+      carbonDNA: dna,
+      hotspot: hot,
+      interventions: list,
+      top3Changes: top3
+    };
   }, [answers]);
 
   // Sync theme to document body
@@ -317,8 +339,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     const token = safeGetItem<string | null>('cm_token', null);
     if (token) {
-      fetchUserData();
+      setTimeout(() => {
+        fetchUserData();
+      }, 0);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -338,7 +363,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       safeSetItem('cm_user', validatedProfile);
       setUser(validatedProfile);
     } catch (err) {
-      throw new Error('Corrupted profile received during login.');
+      throw new Error('Corrupted profile received during login.', { cause: err });
     }
     await fetchUserData();
     setActiveTab('dashboard');
@@ -361,7 +386,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       safeSetItem('cm_user', validatedProfile);
       setUser(validatedProfile);
     } catch (err) {
-      throw new Error('Corrupted profile received during registration.');
+      throw new Error('Corrupted profile received during registration.', { cause: err });
     }
     setAnswers(null);
     setOnboarded(false);
@@ -374,20 +399,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setActiveTab('onboarding');
   };
 
-  const logout = () => {
-    safeRemoveItem('cm_token');
-    safeRemoveItem('cm_user');
-    setUser(null);
-    setAnswers(null);
-    setOnboarded(false);
-    setDailyReceipts([]);
-    setCompletedActions([]);
-    setChallenges(DEFAULT_CHALLENGES);
-    setBadges(DEFAULT_BADGES);
-    setStreak(1);
-    setChatHistory(INITIAL_COACH_MESSAGES);
-    setActiveTab('landing');
-  };
+
 
   const setOnboardingData = async (newAnswers: LifestyleAnswers) => {
     try {
@@ -550,7 +562,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setChatHistory(prev => [...prev, userMsg]);
 
     setTimeout(() => {
-      let reply = "";
+      let reply: string;
       const lower = text.toLowerCase();
       const dnaType = carbonDNA?.type || "The Balanced Eco Explorer";
       const hotCat = hotspot?.category || "general";
